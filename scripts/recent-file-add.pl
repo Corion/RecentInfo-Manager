@@ -87,26 +87,33 @@ has ['applications', 'groups'] => (
     #}
 
 sub as_XML_fragment($self, $doc) {
-    my $bookmark = $doc->createDocumentFragment('bookmark');
+    my $bookmark = $doc->createElement('bookmark');
     $bookmark->setAttribute( 'href' => $self->href );
     #$bookmark->setAttribute( 'app' => $self->app );
     # XXX Make sure to validate that $modified, $visited etc. are proper DateTime strings
+    $bookmark->setAttribute( 'added' => $self->added );
     $bookmark->setAttribute( 'modified' => $self->modified );
     $bookmark->setAttribute( 'visited' => $self->visited );
     #$bookmark->setAttribute( 'exec' => "'perl %u'" );
     my $info = $bookmark->addNewChild( undef, 'info' );
     my $metadata = $info->addNewChild( undef, 'metadata' );
-    my $mime = $metadata->addNewChild( undef, 'mime-type' );
-    $mime->appendText( $self->mime_type );
+    #my $mime = $metadata->addNewChild( 'mime', 'mime-type' );
+    my $mime = $metadata->addNewChild( undef,'mime:mime-type' );
+    $mime->setAttribute( type => $self->mime_type );
+    #$mime->appendText( $self->mime_type );
     $metadata->setAttribute('owner' => 'http://freedesktop.org' );
     # Should we allow this to be empty, or should we leave it out completely then?!
+
+    if( $self->groups->@* ) {
+        my $groups = $metadata->addNewChild( undef, "bookmark:groups" );
+        for my $group ($self->groups->@* ) {
+            $groups->addNewChild( $group->as_XML_fragment( $doc ));
+        };
+    }
+
     my $applications = $metadata->addNewChild( undef, "bookmark:applications" );
     for my $application ($self->applications->@* ) {
         $applications->addNewChild( $application->as_XML_fragment( $doc ));
-    };
-    my $groups = $metadata->addNewChild( undef, "bookmark:groups" );
-    for my $group ($self->groups->@* ) {
-        $groups->addNewChild( $group->as_XML_fragment( $doc ));
     };
 
     return $bookmark;
@@ -116,7 +123,7 @@ sub from_XML_fragment( $class, $frag ) {
     my $meta = $xpc->findnodes('./info[1]/metadata', $frag)->[0];
 
     my %meta = (
-        mime_type => $meta->find('./mime:mime-type', $frag)->[0]->nodeValue,
+        mime_type => $meta->find('./mime:mime-type/@type', $frag)->[0]->nodeValue,
     );
     $class->new(
         href      => $frag->getAttribute('href'),
@@ -127,10 +134,10 @@ sub from_XML_fragment( $class, $frag ) {
         mime_type => $meta{ mime_type },
         applications => [map {
              RecentInfo::Application->from_XML_fragment($_)
-        } $frag->find('./bookmark:applications')->@*],
+        } $frag->find('./bookmark:applications/bookmark:application')->@*],
         groups => [map {
             RecentInfo::Application->from_XML_fragment($_)
-        } $frag->find('./bookmark:groups')->@*],
+        } $frag->find('./bookmark:groups/bookmark:group')->@*],
         #...
     )
 }
@@ -215,7 +222,7 @@ sub save_recent_files( $doc, $filename ) {
     $fh->close;
 }
 
-# XXX change API to use named parameters
+# XXX change API to use named parameters (or object)
 # https://www.freedesktop.org/wiki/Specifications/desktop-bookmark-spec/
 sub add_recent( $doc, $app, $href, $modified, $visited, $mime_type ) {
     my @bookmarks = $doc->getElementsByTagName('xbel');
@@ -262,8 +269,14 @@ my @bookmarks = map {
     }
 } $doc->getElementsByTagName('xbel')->[0]->childNodes()->get_nodelist;
 
-#my $new = recent_files_to_string( $doc );
-my $new = join "\n", map { $_->toString } @bookmarks;
+
+my $xbel = $doc->getElementsByTagName('xbel')->[0];
+$xbel->removeChildNodes();
+for my $bm (@bookmarks) {
+    $xbel->addChild($bm->as_XML_fragment( $doc ));
+};
+
+my $new = recent_files_to_string( $doc );
 use Algorithm::Diff;
 my $diff = Algorithm::Diff->new([split /\r?\n/, $org],[split /\r?\n/, $new]);
 
