@@ -163,12 +163,23 @@ use XML::LibXML::PrettyPrint;
 use IO::AtomicFile;
 use Date::Format::ISO8601 'gmtime_to_iso8601_datetime';
 use List::Util 'first';
+use File::Basename;
 
 # Split up later into ::XBEL and ::Windows
 
 has 'filename' => (
     is => 'lazy',
     default => sub { "$ENV{ XDG_DATA_HOME }/recently-used.xbel" },
+);
+
+has 'app' => (
+    is => 'lazy',
+    default => sub { basename $0 },
+);
+
+has 'exec' => (
+    is => 'lazy',
+    default => sub { sprintf "'%s %%u'", $_[0]->app },
 );
 
 has 'entries' => (
