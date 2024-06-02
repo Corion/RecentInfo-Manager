@@ -247,7 +247,6 @@ sub add_recent_file( $app, $filename, $mime_type, $when=time() ) {
         unless -e $filename;
 
     my $href = "file://$filename";
-    my @stat = stat( $filename );
 
     # Make sure we generate timezones in UTC / Z , not attached to some specific timezone
     # The format conversion should maybe happen in the class?!
@@ -256,16 +255,18 @@ sub add_recent_file( $app, $filename, $mime_type, $when=time() ) {
     # This would mean updating applications+groups for that entry instead
     # of recreating it
     my $modified = gmtime_to_iso8601_datetime( $when );
+
+    # Take added from existing entry
     my $added = gmtime_to_iso8601_datetime( time );
     $when = gmtime_to_iso8601_datetime( $when );
-    RecentInfo::Entry->new(
-    href         =>"file://$filename",
-    mime_type    => $mime_type,
-    added        => $added,
-    modified     => $modified,
-    visited      => $visited,
-    applications => [RecentInfo::Application->new( name => 'geany', exec => "'geany %u'", count => 1, modified => $when )],
-    groups       => [RecentInfo::GroupEntry->new( group => 'geany' )],
+    return RecentInfo::Entry->new(
+        href         =>"file://$filename",
+        mime_type    => $mime_type,
+        added        => $added,
+        modified     => $modified,
+        visited      => $when,
+        applications => [RecentInfo::Application->new( name => $app, exec => "'geany %u'", count => 1, modified => $when )],
+        groups       => [RecentInfo::GroupEntry->new( group => $app )],
     );
 }
 
