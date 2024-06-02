@@ -1,87 +1,102 @@
 #!perl
-#use experimental 'class';
-use feature 'class';
+use 5.020;
+use experimental 'signatures';
 
-class RecentInfo::Application 0.01 {
-    field $name :param;
-    field $exec :param;
-    field $count :param;
+package RecentInfo::Application 0.01;
+use 5.020;
+use Moo 2;
+use experimental 'signatures';
 
-    method as_XML_fragment($doc) {
-        my $app = $doc->createDocumentFragment('bookmark:application');
-        $app->setAttribute("name" => $name);
-        $app->setAttribute("exec" => $exec);
-        $app->setAttribute("count" => $count);
-        return $app
-    }
+has ['name', 'exec', 'param'] => (
+    is => 'ro',
+    required => 1
+);
 
-    # This should be a constructor but isn't
-    method from_XML_fragment( $frag ) {
-        $name = $frag->getAttribute('name');
-        $exec = $frag->getAttribute('exec');
-        $count = $frag->getAttribute('count');
-
-        return $self
-    }
+sub as_XML_fragment($self, $doc) {
+    my $app = $doc->createDocumentFragment('bookmark:application');
+    $app->setAttribute("name" =>  $self->name);
+    $app->setAttribute("exec" =>  $self->exec);
+    $app->setAttribute("count" => $self->count);
+    return $app
 }
 
-class RecentInfo::Entry 0.01 {
-    field $uri :param ;
-    field $display_name :param;
-    field $description :param;
+sub from_XML_fragment( $class, $frag ) {
+    $class->new(
+        name  => $frag->getAttribute('name'),
+        exec  => $frag->getAttribute('exec'),
+        count => $frag->getAttribute('count'),
+    );
+}
 
-    field $added :param;
-    field $modified :param;
-    field $visited :param;
+package RecentInfo::Entry 0.01;
+use 5.020;
+use Moo 2;
+use experimental 'signatures';
 
-    field $mime_type :param;
-    field @applications :param;
+has ['uri', 'display_name', 'description'] => (
+    is => 'ro',
+    required => 1,
+);
 
-    field @groups :param;
 
-    ADJUST {
-        # Convert maybe $added etc. to DateTime or stuff like that?!
-    }
+has ['added', 'visited', 'modified'] => (
+    is => 'ro',
+    required => 1,
+);
 
-    method as_XML_fragment($doc) {
-        my $bookmark = $doc->createDocumentFragment('bookmark');
-        $bookmark->setAttribute( 'href' => $href );
-        #$bookmark->setAttribute( 'app' => $app );
-        # XXX Make sure to validate that $modified, $visited etc. are proper DateTime strings
-        $bookmark->setAttribute( 'modified' => $modified );
-        $bookmark->setAttribute( 'visited' => $visited );
-        #$bookmark->setAttribute( 'exec' => "'perl %u'" );
-        my $info = $bookmark->addNewChild( undef, 'info' );
-        my $metadata = $info->addNewChild( undef, 'metadata' );
-        my $mime = $metadata->addNewChild( undef, 'mime-type' );
-        $mime->appendText( $mime_type );
-        $metadata->setAttribute('owner' => 'http://freedesktop.org' );
-        # Should we allow this to be empty, or should we leave it out completely then?!
-        my $applications = $metadata->addNewChild( undef, "bookmark:applications" );
-        for my $application (@applications) {
-            $applications->addNewChild( $application->as_XML_fragment( $doc );
-        };
-        # What about groups?
+has ['mime_type'] => (
+    is => 'ro',
+    required => 1,
+);
 
-        return $bookmark;
-    }
 
-    # This should be a constructor but isn't
-    method from_XML_fragment( $frag ) {
-        $href = $frag->getAttribute('href');
-        $modified = $frag->getAttribute('modified');
-        $visited = $frag->getAttribute('visited');
+has ['applications', 'groups'] => (
+    is => 'ro',
+    default => sub { [] },
+);
+
+
+    #around 'BUILDARGS' {
+    #    # Convert maybe $added etc. to DateTime or stuff like that?!
+    #}
+
+sub as_XML_fragment($self, $doc) {
+    my $bookmark = $doc->createDocumentFragment('bookmark');
+    $bookmark->setAttribute( 'href' => $self->href );
+    #$bookmark->setAttribute( 'app' => $self->app );
+    # XXX Make sure to validate that $modified, $visited etc. are proper DateTime strings
+    $bookmark->setAttribute( 'modified' => $self->modified );
+    $bookmark->setAttribute( 'visited' => $self->visited );
+    #$bookmark->setAttribute( 'exec' => "'perl %u'" );
+    my $info = $bookmark->addNewChild( undef, 'info' );
+    my $metadata = $info->addNewChild( undef, 'metadata' );
+    my $mime = $metadata->addNewChild( undef, 'mime-type' );
+    $mime->appendText( $self->mime_type );
+    $metadata->setAttribute('owner' => 'http://freedesktop.org' );
+    # Should we allow this to be empty, or should we leave it out completely then?!
+    my $applications = $metadata->addNewChild( undef, "bookmark:applications" );
+    for my $application ($self->applications->@* ) {
+        $applications->addNewChild( $application->as_XML_fragment( $doc ));
+    };
+    # What about groups?
+
+    return $bookmark;
+}
+
+sub from_XML_fragment( $class, $frag ) {
+    $class->new(
+        href      => $frag->getAttribute('href'),
+        modified  => $frag->getAttribute('modified'),
+        visited   => $frag->getAttribute('visited'),
         # info/metadata/mime-type
-        $mime_type = $frag->find('./info[1]/metadata[1]/mime-type[1]')->getTextContent;
-        @applications = map {
+        mime_type => $frag->find('./info[1]/metadata[1]/mime-type[1]')->getTextContent,
+        applications => [map {
             # ...
             # Create fresh objects here
-             RecentInfo::Application->new->from_XML_frament($_);
-        } $frag->getChildNode('bookmark:applications');
+             RecentInfo::Application->new->from_XML_frament($_)
+        } $frag->getChildNode('bookmark:applications')],
         #...
-        return $self
-    }
-
+    )
 }
 
 package main;
@@ -166,7 +181,9 @@ sub add_recent( $doc, $app, $href, $modified, $visited, $mime_type ) {
     die "Too many bookmark lists ('<xbel>') found in document"
         if @bookmarks > 1;
     my $list = $bookmarks[0];
-    $list->appendChild( $bookmark->as_XML_fragment );
+    $list->appendChild( RecentInfo::Entry->new(
+# ...
+    ));
 }
 
 sub add_recent_file( $doc, $app, $filename, $mime_type ) {
@@ -182,8 +199,14 @@ sub add_recent_file( $doc, $app, $filename, $mime_type ) {
 # Manual test 2 - check behaviour: where is a manually added file added in the order?
 # Test 1 - create XBEL XML for a single file
 
+my $org = do {
+    open my $fh, '<:raw', $recent;
+    local $/;
+    <$fh>;
+};
+$org =~ s/\s+(xmlns:(?:bookmark|mime))/ $1/gm;
 my $doc = load_recent_files( $recent );
-add_recent_file( $doc, 'perl', $0, 'application/perl' );
+#add_recent_file( $doc, 'perl', $0, 'application/perl' );
 
 my $new = recent_files_to_string( $doc );
 use Algorithm::Diff;
@@ -204,9 +227,9 @@ while(  $diff->Next()  ) {
         printf "%d,%dc%d,%d\n",
             $diff->Get(qw( Min1 Max1 Min2 Max2 ));
     }
-    print "< $_"   for  $diff->Items(1);
-    print $sep;
-    print "> $_"   for  $diff->Items(2);
+    say "< $_"   for  $diff->Items(1);
+    say $sep;
+    say "> $_"   for  $diff->Items(2);
 }
 
 #save_recent_files( $doc => "$recent.tmp" );
