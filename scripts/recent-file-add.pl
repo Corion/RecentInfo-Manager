@@ -9,7 +9,7 @@ use 5.020;
 use Moo 2;
 use experimental 'signatures';
 
-has ['name', 'exec', 'param'] => (
+has ['name', 'exec', 'modified', 'count'] => (
     is => 'ro',
     required => 1
 );
@@ -18,6 +18,7 @@ sub as_XML_fragment($self, $doc) {
     my $app = $doc->createDocumentFragment('bookmark:application');
     $app->setAttribute("name" =>  $self->name);
     $app->setAttribute("exec" =>  $self->exec);
+    $app->setAttribute("modified" =>  $self->exec);
     $app->setAttribute("count" => $self->count);
     return $app
 }
@@ -27,6 +28,7 @@ sub from_XML_fragment( $class, $frag ) {
     $class->new(
         name  => $frag->getAttribute('name'),
         exec  => $frag->getAttribute('exec'),
+        modified  => $frag->getAttribute('modified'),
         count => $frag->getAttribute('count'),
     );
 }
@@ -260,7 +262,8 @@ my @bookmarks = map {
     }
 } $doc->getElementsByTagName('xbel')->[0]->childNodes()->get_nodelist;
 
-my $new = recent_files_to_string( $doc );
+#my $new = recent_files_to_string( $doc );
+my $new = join "\n", map { $_->toString } @bookmarks;
 use Algorithm::Diff;
 my $diff = Algorithm::Diff->new([split /\r?\n/, $org],[split /\r?\n/, $new]);
 
