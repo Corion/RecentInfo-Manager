@@ -15,16 +15,15 @@ has ['name', 'exec', 'modified', 'count'] => (
 );
 
 sub as_XML_fragment($self, $doc) {
-    my $app = $doc->createDocumentFragment('bookmark:application');
+    my $app = $doc->createElement('bookmark:application');
     $app->setAttribute("name" =>  $self->name);
     $app->setAttribute("exec" =>  $self->exec);
-    $app->setAttribute("modified" =>  $self->exec);
+    $app->setAttribute("modified" =>  $self->modified);
     $app->setAttribute("count" => $self->count);
     return $app
 }
 
 sub from_XML_fragment( $class, $frag ) {
-    warn "Application";
     $class->new(
         name  => $frag->getAttribute('name'),
         exec  => $frag->getAttribute('exec'),
@@ -44,15 +43,15 @@ has ['group'] => (
 );
 
 sub as_XML_fragment($self, $doc) {
-    my $group = $doc->createDocumentFragment('bookmark:group');
-    $group->setText($self->group);
+    my $group = $doc->createElement('bookmark:group');
+    $group->addChild($doc->createTextNode($self->group));
+    #$group->setTextContent($self->group);
     return $group
 }
 
 sub from_XML_fragment( $class, $frag ) {
-    warn "Group";
     $class->new(
-        group => $frag->getTextContent,
+        group => $frag->textContent,
     );
 }
 
@@ -107,13 +106,13 @@ sub as_XML_fragment($self, $doc) {
     if( $self->groups->@* ) {
         my $groups = $metadata->addNewChild( undef, "bookmark:groups" );
         for my $group ($self->groups->@* ) {
-            $groups->addNewChild( $group->as_XML_fragment( $doc ));
+            $groups->addChild( $group->as_XML_fragment( $doc ));
         };
     }
 
     my $applications = $metadata->addNewChild( undef, "bookmark:applications" );
     for my $application ($self->applications->@* ) {
-        $applications->addNewChild( $application->as_XML_fragment( $doc ));
+        $applications->addChild( $application->as_XML_fragment( $doc ));
     };
 
     return $bookmark;
@@ -123,8 +122,15 @@ sub from_XML_fragment( $class, $frag ) {
     my $meta = $xpc->findnodes('./info[1]/metadata', $frag)->[0];
 
     my %meta = (
-        mime_type => $meta->find('./mime:mime-type/@type', $frag)->[0]->nodeValue,
+        mime_type => $xpc->find('./mime:mime-type/@type', $meta)->[0]->nodeValue,
     );
+
+    my @applications = $xpc->find('./bookmark:applications/bookmark:application', $meta)->@*;
+    if( !@applications ) {
+        warn $meta->toString;
+        die "No applications found";
+    };
+
     $class->new(
         href      => $frag->getAttribute('href'),
         added     => $frag->getAttribute('added'),
@@ -134,10 +140,10 @@ sub from_XML_fragment( $class, $frag ) {
         mime_type => $meta{ mime_type },
         applications => [map {
              RecentInfo::Application->from_XML_fragment($_)
-        } $frag->find('./bookmark:applications/bookmark:application')->@*],
+        } $xpc->find('./bookmark:applications/bookmark:application', $meta)->@*],
         groups => [map {
-            RecentInfo::Application->from_XML_fragment($_)
-        } $frag->find('./bookmark:groups/bookmark:group')->@*],
+            RecentInfo::GroupEntry->from_XML_fragment($_)
+        } $xpc->find('./bookmark:groups/bookmark:group', $meta)->@*],
         #...
     )
 }
@@ -234,17 +240,36 @@ sub add_recent( $doc, $app, $href, $modified, $visited, $mime_type ) {
     ));
 }
 
-sub add_recent_file( $doc, $app, $filename, $mime_type ) {
+sub add_recent_file( $app, $filename, $mime_type, $when=undef ) {
     $filename = File::Spec->rel2abs($filename);
+
+    die "Won't add non-existing file"
+        unless -e $filename;
+
     my $href = "file://$filename";
     my @stat = stat( $filename );
+    $when //= time();
 
     # Make sure we generate timezones in UTC / Z , not attached to some specific timezone
     # The format conversion should maybe happen in the class?!
+    # XXX check if the file already exists elsewhere and update that instead
+    # of recreating stuff!
+    # This would mean updating applications+groups for that entry instead
+    # of recreating it
     my $modified = gmtime_to_iso8601_datetime( $stat[9] );
     my $visited = gmtime_to_iso8601_datetime( time );
     my $added = gmtime_to_iso8601_datetime( time );
-    add_recent( $doc, $app, $href, $modified, $visited, $mime_type );
+    my $when = gmtime_to_iso8601_datetime( $when );
+    RecentInfo::Entry->new(
+    href         =>"file://$filename",
+    mime_type    => $mime_type,
+    added        => $added,
+    modified     => $modified,
+    visited      => $visited,
+    applications => [RecentInfo::Application->new( name => 'geany', exec => "'geany %u'", count => 1, modified => $when )],
+    groups       => [RecentInfo::GroupEntry->new( group => 'geany' )],
+    );
+    #add_recent( $doc, $app, $href, $modified, $visited, $mime_type );
 }
 
 # Manual test 1 - check behaviour: a manually added file must exist?!
@@ -269,6 +294,7 @@ my @bookmarks = map {
     }
 } $doc->getElementsByTagName('xbel')->[0]->childNodes()->get_nodelist;
 
+push @bookmarks, add_recent_file( 'geany', 'test', 'text/plain' );
 
 my $xbel = $doc->getElementsByTagName('xbel')->[0];
 $xbel->removeChildNodes();
