@@ -219,41 +219,51 @@ sub find( $self, $href ) {
     first { $_->href eq $href } $self->entries->@*;
 }
 
-sub add( $self, $app, $filename, $mime_type, $when=time() ) {
+sub add( $self, $filename, $info = {} ) {
+
+    $info->{when} //= time();
+    $info->{app } //= $self->app;
+    $info->{exec} //= $self->exec;
+    $info->{visited} //= time();
+    $info->{mime_type} //= 'application/octet-stream';
+
     $filename = File::Spec->rel2abs($filename);
 
-    #die "Won't add non-existing file"
-    #    unless -e $filename;
-
+    # Ugh - do we really want to do this?!
     my $href = "file://$filename";
 
-    # Make sure we generate timezones in UTC / Z , not attached to some specific timezone
-    # The format conversion should maybe happen in the class?!
-    # XXX check if the file already exists elsewhere and update that instead
-    # of recreating stuff!
-    # This would mean updating applications+groups for that entry instead
-    # of recreating it
-    my $modified = gmtime_to_iso8601_datetime( $when );
+    my ($added, $modified);
+    if( $info->{modified}) {
+        $modified = gmtime_to_iso8601_datetime( $modified );
+    };
+    if( $info->{added}) {
+        $added = gmtime_to_iso8601_datetime( $added );
+    };
 
     # Take added from existing entry
-    my $added = gmtime_to_iso8601_datetime( time );
-    $when = gmtime_to_iso8601_datetime( $when );
+    my $when = gmtime_to_iso8601_datetime( $info->{when} );
+    my $mime_type = $info->{mime_type};
+    my $app = $info->{app};
+    my $exec = $info->{exec};
 
     my $res = $self->find($href);
 
     if(! $res) {
+        $added //= gmtime_to_iso8601_datetime( $info->{when} );
+        $modified //= gmtime_to_iso8601_datetime( $info->{when} );
         $res = RecentInfo::Entry->new(
             href         =>"file://$filename",
             mime_type    => $mime_type,
-            added        => $when,
+            added        => $added,
             modified     => $modified,
             visited      => $when,
-            applications => [RecentInfo::Application->new( name => $app, exec => "'geany %u'", count => 1, modified => $when )],
+            applications => [RecentInfo::Application->new( name => $app, exec => $exec, count => 1, modified => $when )],
             groups       => [RecentInfo::GroupEntry->new( group => $app )],
         );
         push $self->entries->@*, $res;
     } else {
-        $res->modified($modified);
+        $res->added($added) if $added;
+        $res->modified($modified) if $modified;
         $res->visited($when);
         # Check if we are in the group, otherwise add ourselves
 
@@ -344,18 +354,6 @@ my $recent = RecentInfo::Manager->new();
 #}
 
 
-# XXX change API to use named parameters (or object)
-# https://www.freedesktop.org/wiki/Specifications/desktop-bookmark-spec/
-sub add_recent( $doc, $app, $href, $modified, $visited, $mime_type ) {
-    my @bookmarks = $doc->getElementsByTagName('xbel');
-    die "Too many bookmark lists ('<xbel>') found in document"
-        if @bookmarks > 1;
-    my $list = $bookmarks[0];
-    $list->appendChild( RecentInfo::Entry->new(
-# ...
-    ));
-}
-
 # Manual test 1 - check behaviour: a manually added file must exist?! - no, but they must be unique
 # Manual test 2 - check behaviour: where is a manually added file added in the order?
 # Test 1 - create XBEL XML for a single file
@@ -367,7 +365,7 @@ my $org = do {
 };
 $org =~ s/\s+(xmlns:(?:bookmark|mime))/ $1/gm;
 
-$recent->add( 'geany', 'test', 'text/plain' );
+$recent->add( xtest => { app => 'geany', mime_type => 'text/plain' });
 my $new = $recent->toString;
 
 use Algorithm::Diff;
