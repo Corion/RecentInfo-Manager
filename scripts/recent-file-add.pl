@@ -2,6 +2,8 @@
 use 5.020;
 use experimental 'signatures';
 
+my $xpc;
+
 package RecentInfo::Application 0.01;
 use 5.020;
 use Moo 2;
@@ -21,10 +23,34 @@ sub as_XML_fragment($self, $doc) {
 }
 
 sub from_XML_fragment( $class, $frag ) {
+    warn "Application";
     $class->new(
         name  => $frag->getAttribute('name'),
         exec  => $frag->getAttribute('exec'),
         count => $frag->getAttribute('count'),
+    );
+}
+
+package RecentInfo::GroupEntry 0.01;
+use 5.020;
+use Moo 2;
+use experimental 'signatures';
+
+has ['group'] => (
+    is => 'ro',
+    required => 1
+);
+
+sub as_XML_fragment($self, $doc) {
+    my $group = $doc->createDocumentFragment('bookmark:group');
+    $group->setText($self->group);
+    return $group
+}
+
+sub from_XML_fragment( $class, $frag ) {
+    warn "Group";
+    $class->new(
+        group => $frag->getTextContent,
     );
 }
 
@@ -33,11 +59,11 @@ use 5.020;
 use Moo 2;
 use experimental 'signatures';
 
-has ['uri', 'display_name', 'description'] => (
+#has ['href', 'display_name', 'description'] => (
+has ['href'] => (
     is => 'ro',
     required => 1,
 );
-
 
 has ['added', 'visited', 'modified'] => (
     is => 'ro',
@@ -49,12 +75,10 @@ has ['mime_type'] => (
     required => 1,
 );
 
-
 has ['applications', 'groups'] => (
     is => 'ro',
     default => sub { [] },
 );
-
 
     #around 'BUILDARGS' {
     #    # Convert maybe $added etc. to DateTime or stuff like that?!
@@ -78,23 +102,33 @@ sub as_XML_fragment($self, $doc) {
     for my $application ($self->applications->@* ) {
         $applications->addNewChild( $application->as_XML_fragment( $doc ));
     };
-    # What about groups?
+    my $groups = $metadata->addNewChild( undef, "bookmark:groups" );
+    for my $group ($self->groups->@* ) {
+        $groups->addNewChild( $group->as_XML_fragment( $doc ));
+    };
 
     return $bookmark;
 }
 
 sub from_XML_fragment( $class, $frag ) {
+    my $meta = $xpc->findnodes('./info[1]/metadata', $frag)->[0];
+
+    my %meta = (
+        mime_type => $meta->find('./mime:mime-type', $frag)->[0]->nodeValue,
+    );
     $class->new(
         href      => $frag->getAttribute('href'),
+        added     => $frag->getAttribute('added'),
         modified  => $frag->getAttribute('modified'),
         visited   => $frag->getAttribute('visited'),
         # info/metadata/mime-type
-        mime_type => $frag->find('./info[1]/metadata[1]/mime-type[1]')->getTextContent,
+        mime_type => $meta{ mime_type },
         applications => [map {
-            # ...
-            # Create fresh objects here
-             RecentInfo::Application->new->from_XML_frament($_)
-        } $frag->getChildNode('bookmark:applications')],
+             RecentInfo::Application->from_XML_fragment($_)
+        } $frag->find('./bookmark:applications')->@*],
+        groups => [map {
+            RecentInfo::Application->from_XML_fragment($_)
+        } $frag->find('./bookmark:groups')->@*],
         #...
     )
 }
@@ -134,6 +168,11 @@ sub load_recent_files( $filename ) {
         my $doc = XML::LibXML
                       ->new( load_ext_dtd => 0, keep_blanks => 1, expand_entities => 0, )
                       ->load_xml( location => $filename );
+
+        $xpc = XML::LibXML::XPathContext->new();
+        $xpc->registerNs( bookmark => "http://www.freedesktop.org/standards/desktop-bookmarks");
+        $xpc->registerNs( mime     => "http://www.freedesktop.org/standards/shared-mime-info" );
+
         # Just to make sure we read in valid(ish) data
         #validate_xml( $doc );
         # Parse our tree from the document, instead of using the raw XML
@@ -190,8 +229,12 @@ sub add_recent_file( $doc, $app, $filename, $mime_type ) {
     $filename = File::Spec->rel2abs($filename);
     my $href = "file://$filename";
     my @stat = stat( $filename );
+
+    # Make sure we generate timezones in UTC / Z , not attached to some specific timezone
+    # The format conversion should maybe happen in the class?!
     my $modified = gmtime_to_iso8601_datetime( $stat[9] );
     my $visited = gmtime_to_iso8601_datetime( time );
+    my $added = gmtime_to_iso8601_datetime( time );
     add_recent( $doc, $app, $href, $modified, $visited, $mime_type );
 }
 
@@ -207,6 +250,15 @@ my $org = do {
 $org =~ s/\s+(xmlns:(?:bookmark|mime))/ $1/gm;
 my $doc = load_recent_files( $recent );
 #add_recent_file( $doc, 'perl', $0, 'application/perl' );
+
+my @bookmarks = map {
+    if( $_->nodeType == XML_TEXT_NODE ) {
+        # ignore
+        ()
+    } else {
+        RecentInfo::Entry->from_XML_fragment( $_ )
+    }
+} $doc->getElementsByTagName('xbel')->[0]->childNodes()->get_nodelist;
 
 my $new = recent_files_to_string( $doc );
 use Algorithm::Diff;
