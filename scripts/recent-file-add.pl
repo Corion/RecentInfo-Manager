@@ -240,7 +240,7 @@ sub add_recent( $doc, $app, $href, $modified, $visited, $mime_type ) {
     ));
 }
 
-sub add_recent_file( $app, $filename, $mime_type, $when=undef ) {
+sub add_recent_file( $app, $filename, $mime_type, $when=time() ) {
     $filename = File::Spec->rel2abs($filename);
 
     die "Won't add non-existing file"
@@ -248,7 +248,6 @@ sub add_recent_file( $app, $filename, $mime_type, $when=undef ) {
 
     my $href = "file://$filename";
     my @stat = stat( $filename );
-    $when //= time();
 
     # Make sure we generate timezones in UTC / Z , not attached to some specific timezone
     # The format conversion should maybe happen in the class?!
@@ -256,10 +255,9 @@ sub add_recent_file( $app, $filename, $mime_type, $when=undef ) {
     # of recreating stuff!
     # This would mean updating applications+groups for that entry instead
     # of recreating it
-    my $modified = gmtime_to_iso8601_datetime( $stat[9] );
-    my $visited = gmtime_to_iso8601_datetime( time );
+    my $modified = gmtime_to_iso8601_datetime( $when );
     my $added = gmtime_to_iso8601_datetime( time );
-    my $when = gmtime_to_iso8601_datetime( $when );
+    $when = gmtime_to_iso8601_datetime( $when );
     RecentInfo::Entry->new(
     href         =>"file://$filename",
     mime_type    => $mime_type,
@@ -269,7 +267,6 @@ sub add_recent_file( $app, $filename, $mime_type, $when=undef ) {
     applications => [RecentInfo::Application->new( name => 'geany', exec => "'geany %u'", count => 1, modified => $when )],
     groups       => [RecentInfo::GroupEntry->new( group => 'geany' )],
     );
-    #add_recent( $doc, $app, $href, $modified, $visited, $mime_type );
 }
 
 # Manual test 1 - check behaviour: a manually added file must exist?!
