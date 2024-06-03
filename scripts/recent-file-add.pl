@@ -17,11 +17,11 @@ GetOptions(
 
 
 $exec_command //= "$exec_command '%u'";
-$mime_type //= MIME::Detect->new()->mime_type_from_name($filename) // 'application/octet-stream';
 
 my $recent = RecentInfo::Manager->new();
 for my $file (@ARGV) {
-    $recent->add( $file => { app => $appname, mime_type => $mime_type });
+    my $mt = $mime_type // MIME::Detect->new()->mime_type_from_name($file) // 'application/octet-stream';
+    $recent->add( $file => { app => $appname, mime_type => $mt });
 };
 my $new = $recent->toString;
 
