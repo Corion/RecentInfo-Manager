@@ -11,11 +11,17 @@ use List::Util 'first';
 use File::Spec;
 use File::Basename;
 
+use MIME::Detect;
 use RecentInfo::Entry;
 use RecentInfo::Application;
 use RecentInfo::GroupEntry;
 
-# Split up later into ::XBEL and ::Windows
+# Split up later into ::XBEL and ::Windows, and make this a factory (plus a role maybe)
+# For Windows, those live as links under $ENV{APPDATA}\Microsoft\Windows\Recent
+# similar information can be synthesized from there
+
+# Also detect the MIME type here (for XBEL)
+use MIME::Detect;
 
 has 'filename' => (
     is => 'lazy',
@@ -71,7 +77,11 @@ sub add( $self, $filename, $info = {} ) {
     $info->{app } //= $self->app;
     $info->{exec} //= $self->exec;
     $info->{visited} //= time();
-    $info->{mime_type} //= 'application/octet-stream';
+
+    if( ! exists $info->{mime_type}) {
+        state $md = MIME::Detect->new();
+        $info->{mime_type} = $md->mime_type_from_name($filename) // 'application/octet-stream';
+    };
 
     $filename = File::Spec->rel2abs($filename);
 
