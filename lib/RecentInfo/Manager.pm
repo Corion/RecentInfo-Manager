@@ -127,7 +127,7 @@ sub add( $self, $filename, $info = {} ) {
             push $res->groups->@*, RecentInfo::GroupEntry->new( group => $app );
         };
         if(! grep { $_->name eq $app } $res->applications->@*) {
-            push $res->groups->@*,
+            push $res->applications->@*,
                 RecentInfo::Application->new( name => $app, exec => "'geany %u'", count => 1, modified => $when )
         } else {
             # Update our most recent entry in ->applications
