@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:mime="http://www.freedesktop.org/standards/shared-mime-info"
+    xmlns:bookmark="http://www.freedesktop.org/standards/shared-mime-info"
+ targetNamespace="http://abcd.com">
+
+<xs:attribute name="version" type="xs:string"/>
+<xs:attribute name="href" type="xs:string"/>
+<xs:attribute name="added" type="xs:string"/>
+<xs:attribute name="modified" type="xs:string"/>
+<xs:attribute name="visited" type="xs:string"/>
+<xs:attribute name="owner" type="xs:string"/>
+<xs:attribute name="mime-type" type="xs:string"/>
+
+<xs:element name="xbel">
+  <xs:attribute ref="version" />
+  <xs:complexType>
+  <xs:sequence>
+     <xs:element ref="bookmark"/>
+  </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="bookmark">
+  <xs:complexType>
+    <xs:attribute ref="href" use="required"/>
+    <xs:attribute ref="added" use="required"/>
+    <xs:attribute ref="modified" use="required"/>
+    <xs:attribute ref="visited" use="required"/>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="metadata">
+  <xs:complexType>
+    <xs:all>
+	<xs:element ref="mime-type" maxOccurs="1" minOccurs="1" />
+    <xs:element ref="info" maxOccurs="1" minOccurs="1" />
+    <xs:element ref="icon" maxOccurs="1" minOccurs="0" />
+    <xs:element ref="groups" maxOccurs="1" minOccurs="0" />
+    <xs:element ref="applications" maxOccurs="1" minOccurs="0" />
+    <xs:element ref="private" maxOccurs="1" minOccurs="0" />
+    </xs:all>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="groups">
+  <xs:complexType>
+      <xs:element ref="group"/>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="applications">
+  <xs:complexType>
+    <xs:element ref="application" />
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="application" type="xs:string">
+  <xs:attribute ref="href" use="required"/>
+  <xs:attribute ref="added" use="required"/>
+  <xs:attribute ref="modified" use="required"/>
+  <xs:attribute ref="visited" use="required"/>
+</xs:element>
+
+<xs:element name="group" type="xs:string" />
+
+</xs:schema>
