@@ -3,6 +3,8 @@
     xmlns:bookmark="http://www.freedesktop.org/standards/desktop-bookmarks"
     xmlns:mime="http://www.freedesktop.org/standards/shared-mime-info"
     xmlns=""
+    xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+    vc:minVersion="1.1"
     >
 
 <xs:import
@@ -39,9 +41,8 @@
 <xs:attribute name="added" type="xs:string"/>
 <xs:attribute name="modified" type="xs:string"/>
 <xs:attribute name="visited" type="xs:string"/>
-<xs:attribute name="owner" type="xs:string"/>
 
-<xs:complexType name="metadataType">
+<xs:complexType name="metadataTypeFD">
   <xs:sequence>
       <xs:element ref="mime:mime-type" maxOccurs="1" minOccurs="1" />
       <xs:element name="icon" type="xs:string" maxOccurs="1" minOccurs="0" />
@@ -49,12 +50,33 @@
       <xs:element ref="bookmark:applications" maxOccurs="1" minOccurs="0" />
       <xs:element name="private" type="xs:boolean" maxOccurs="1" minOccurs="0" />
   </xs:sequence>
-  <xs:attribute ref="owner" use="required"/>
+  <xs:attribute name="owner" use="required">
+      <xs:simpleType>
+          <xs:restriction base="xs:string">
+              <xs:enumeration value="http://freedesktop.org"/>
+          </xs:restriction>
+      </xs:simpleType>
+  </xs:attribute>
 </xs:complexType>
 
+<!--
+<xs:complexType name="metadataTypeOther">
+  <xs:sequence>
+  <xs:any processContents="skip"/>
+  </xs:sequence>
+  <xs:attribute name="owner" use="required">
+      <xs:simpleType>
+          <xs:restriction base="xs:string" />
+      </xs:simpleType>
+  </xs:attribute>
+</xs:complexType>
+-->
 <xs:complexType name="infoType">
     <xs:sequence>
-      <xs:element name="metadata" type="metadataType" minOccurs="1" maxOccurs="unbounded"/>
+      <xs:choice minOccurs="1" maxOccurs="unbounded">
+          <!-- <xs:element name="metadata" type="metadataTypeOther" /> -->
+          <xs:element name="metadata" type="metadataTypeFD" />
+      </xs:choice>
     </xs:sequence>
 </xs:complexType>
 

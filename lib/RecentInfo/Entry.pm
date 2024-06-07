@@ -25,6 +25,12 @@ has ['applications', 'groups'] => (
     default => sub { [] },
 );
 
+# XML fragments as strings
+has 'othermeta' => (
+    is => 'ro',
+    default => sub { [] },
+);
+
 state $xpc = XML::LibXML::XPathContext->new();
 $xpc->registerNs( bookmark => "http://www.freedesktop.org/standards/desktop-bookmarks");
 $xpc->registerNs( mime     => "http://www.freedesktop.org/standards/shared-mime-info" );
@@ -47,6 +53,10 @@ sub as_XML_fragment($self, $doc) {
     $metadata->setAttribute('owner' => 'http://freedesktop.org' );
     # Should we allow this to be empty, or should we leave it out completely then?!
 
+    for my $other ($self->othermeta->@* ) {
+        $info->addChild( $other );
+    };
+
     if( $self->groups->@* ) {
         my $groups = $metadata->addNewChild( undef, "bookmark:groups" );
         for my $group ($self->groups->@* ) {
@@ -63,11 +73,15 @@ sub as_XML_fragment($self, $doc) {
 }
 
 sub from_XML_fragment( $class, $frag ) {
-    my $meta = $xpc->findnodes('./info[1]/metadata', $frag)->[0];
+    my $meta = $xpc->findnodes('./info[1]/metadata[@owner="http://freedesktop.org"]', $frag)->[0];
     if(! $meta) {
         warn $frag->toString;
         croak "Invalid xml?! No <info>/<metadata> element found"
     };
+
+    my $othermeta = $xpc->findnodes('./info[1]/metadata[@owner!="http://freedesktop.org"]', $frag);
+    my @othermeta = map { $_->cloneNode(1) } $othermeta->@*;
+
     my %meta = (
         mime_type => $xpc->find('./mime:mime-type/@type', $meta)->[0]->nodeValue,
     );
@@ -91,6 +105,7 @@ sub from_XML_fragment( $class, $frag ) {
         groups => [map {
             RecentInfo::GroupEntry->from_XML_fragment($_)
         } $xpc->find('./bookmark:groups/bookmark:group', $meta)->@*],
+        othermeta => \@othermeta,
         #...
     )
 }

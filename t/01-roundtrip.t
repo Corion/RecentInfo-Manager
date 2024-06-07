@@ -10,15 +10,14 @@ use stable 'postderef';
 
 my @tests;
 {
-    local $/ = "---\n";
+    local $/;
     @tests = map {
-        # name?
-        # todo?
-        chomp;
+        s/\A---(?: ([^\r\n]+))?\r?\n//;
         {
             xbel => $_,
+            todo => $1,
         }
-    } <DATA>;
+    } split /(?=---)/, <DATA>;
 }
 
 sub valid_xml( $xml, $msg ) {
@@ -36,6 +35,10 @@ sub valid_xml( $xml, $msg ) {
 
 for my $test (@tests) {
     my $xml = $test->{xbel};
+    my $todo;
+    if( $test->{todo}) {
+        $todo = todo($test->{todo});
+    };
     valid_xml( $xml, "The input XML is valid" );
 
     my $xbel = RecentInfo::Manager->new( filename => undef );
@@ -119,6 +122,31 @@ __DATA__
           <bookmark:application name="geany" exec="&apos;geany %u&apos;" modified="2024-06-06T15:59:35.484582Z" count="1"/>
           <bookmark:application name="geany2" exec="&apos;geany %u&apos;" modified="2024-06-06T15:59:35.484582Z" count="1"/>
         </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+</xbel>
+
+--- We (well, XSD) don't handle arbitrary metadata well
+<?xml version="1.0" encoding="UTF-8"?>
+<xbel xmlns:bookmark="http://www.freedesktop.org/standards/desktop-bookmarks"
+      xmlns:mime="http://www.freedesktop.org/standards/shared-mime-info"
+      version="1.0">
+  <bookmark href="file:///home/corion/Projekte/MIME-Detect/Changes" added="2024-06-06T15:59:35.484580Z" modified="2024-06-06T15:59:35.484583Z" visited="2024-06-06T15:59:35.484580Z">
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="text/plain"/>
+        <bookmark:groups>
+          <bookmark:group>geany</bookmark:group>
+          <bookmark:group>Office</bookmark:group>
+        </bookmark:groups>
+        <bookmark:applications>
+          <bookmark:application name="geany" exec="&apos;geany %u&apos;" modified="2024-06-06T15:59:35.484582Z" count="1"/>
+          <bookmark:application name="geany2" exec="&apos;geany %u&apos;" modified="2024-06-06T15:59:35.484582Z" count="1"/>
+        </bookmark:applications>
+      </metadata>
+      <metadata owner="http://example.com">
+        <img href="https://example.com/welcome.png"/>
       </metadata>
     </info>
   </bookmark>
