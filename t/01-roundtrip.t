@@ -37,12 +37,14 @@ sub valid_xml( $xml, $msg ) {
 
 for my $test (@tests) {
     my $xbel = RecentInfo::Manager->new( filename => undef );
-    valid_xml( $xbel->toString, "The input XML is valid" );
     my $bm = $xbel->fromString( $test->{xbel});
     $xbel->entries->@* = $bm->@*;
-
-    valid_xml( $xbel->toString, "The generated XML is valid" );
     my $xml = $xbel->toString;
+
+    valid_xml( $xml, "The input XML is valid" );
+
+    $xml = $xbel->toString;
+    valid_xml( $xml, "The generated XML is valid" );
 
     # Fudge the whitespace a bit
     $test->{xbel} =~ s!\s+xmlns:! xmlns:!msg;
