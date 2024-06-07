@@ -25,7 +25,6 @@ sub valid_xml( $xml, $msg ) {
     state $xmlschema = XML::LibXML::Schema->new( location => 'xsd/recently-used-xbel.xsd', no_network => 1 );
     my $doc = XML::LibXML->new->parse_string( $xml );
 
-    my $todo = todo("The XSD is not well-written");
     try {
         $xmlschema->validate( $doc );
         pass($msg);
