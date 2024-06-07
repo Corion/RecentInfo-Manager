@@ -32,13 +32,13 @@
 
 <xs:complexType name="groupsType">
   <xs:sequence>
-    <xs:element ref="bookmark:group" minOccurs="0" />
+    <xs:element ref="bookmark:group" minOccurs="0" maxOccurs="unbounded" />
   </xs:sequence>
 </xs:complexType>
 
 <xs:complexType name="applicationsType">
     <xs:sequence>
-      <xs:element ref="bookmark:application" minOccurs="0" />
+      <xs:element ref="bookmark:application" minOccurs="0" maxOccurs="unbounded" />
     </xs:sequence>
 </xs:complexType>
 
