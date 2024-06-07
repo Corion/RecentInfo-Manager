@@ -36,12 +36,12 @@ sub valid_xml( $xml, $msg ) {
 }
 
 for my $test (@tests) {
+    my $xml = $test->{xbel};
+    valid_xml( $xml, "The input XML is valid" );
+
     my $xbel = RecentInfo::Manager->new( filename => undef );
     my $bm = $xbel->fromString( $test->{xbel});
     $xbel->entries->@* = $bm->@*;
-    my $xml = $xbel->toString;
-
-    valid_xml( $xml, "The input XML is valid" );
 
     $xml = $xbel->toString;
     valid_xml( $xml, "The generated XML is valid" );
@@ -50,7 +50,25 @@ for my $test (@tests) {
     $test->{xbel} =~ s!\s+xmlns:! xmlns:!msg;
     $test->{xbel} =~ s!\s+>!>!msg;
     $test->{xbel} =~ s!\s+version=! version=!msg;
-    is $xml, $test->{xbel}, "The strings are identical";
+    $test->{xbel} =~ s!\s+\z!!msg;
+    $xml =~ s!\s+\z!!msg;
+
+    # Since Test2::V0 does not produce usable diffs, compare line-by-line
+    # this works since we expect things to align
+    my $x1 = [split /\r?\n/, $test->{xbel}];
+    my $x2 = [split /\r?\n/, $xml];
+
+    # Fudge the attributes in the "xbel" element
+    for( $x1->[1], $x2->[1] ) {
+        my ($version,$bookmark,$mime);
+        s!\b(version=[^>\s]+)!! and $version = $1;
+        s!\b(xmlns:bookmark=[^>\s]+)!! and $bookmark = $1;
+        s!\b(xmlns:mime=[^>\s]+)!! and $mime = $1;
+
+        $_ =~ s/xbel /xbel $version $bookmark $mime/;
+    };
+
+    is $x1, $x2, "The strings are identical";
 
     my $reconstructed = RecentInfo::Manager->new( filename => undef );
     $bm = $reconstructed->fromString( $xml );
