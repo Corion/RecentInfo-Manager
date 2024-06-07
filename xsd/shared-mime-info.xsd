@@ -4,8 +4,6 @@
            targetNamespace="http://www.freedesktop.org/standards/shared-mime-info"
            >
 
-<xs:simpleType name="mimeType">
-    <xs:restriction base="xs:string" />
-</xs:simpleType>
+<xs:element name="mime-type" />
 
 </xs:schema>

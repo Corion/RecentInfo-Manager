@@ -2,6 +2,7 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
     xmlns:bookmark="http://www.freedesktop.org/standards/desktop-bookmarks"
     xmlns:mime="http://www.freedesktop.org/standards/shared-mime-info"
+    xmlns=""
     >
 
 <xs:import
@@ -9,51 +10,45 @@
     schemaLocation="shared-mime-info.xsd"
     />
 
+<xs:import
+    namespace="http://www.freedesktop.org/standards/desktop-bookmarks"
+    schemaLocation="recently-used-xbel-internal.xsd"
+    />
+
+<xs:complexType name="groupType">
+  <xs:simpleContent>
+    <xs:extension base="xs:string" />
+  </xs:simpleContent>
+</xs:complexType>
+
+<xs:complexType name="applicationType">
+  <xs:simpleContent>
+    <xs:extension base="xs:string">
+      <xs:attribute type="xs:string" name="href" use="required"/>
+      <xs:attribute type="xs:string" name="added" use="required"/>
+      <xs:attribute type="xs:string" name="modified" use="required"/>
+      <xs:attribute type="xs:string" name="visited" use="required"/>
+    </xs:extension>
+  </xs:simpleContent>
+</xs:complexType>
+
+<xs:element name="group" type="groupType" />
+<xs:element name="application" type="applicationType" />
+
 <xs:attribute name="href" type="xs:string"/>
 <xs:attribute name="added" type="xs:string"/>
 <xs:attribute name="modified" type="xs:string"/>
 <xs:attribute name="visited" type="xs:string"/>
 <xs:attribute name="owner" type="xs:string"/>
 
-<xs:complexType name="groupType">
-  <xs:simpleContent>
-    <xs:extension base="xs:string">
-    </xs:extension>
-  </xs:simpleContent>
-</xs:complexType>
-
-<xs:complexType name="groupsType">
-  <xs:sequence>
-    <xs:element type="groupType" minOccurs="0" name="group"/>
-  </xs:sequence>
-</xs:complexType>
-
-<xs:complexType name="applicationType">
-  <xs:simpleContent>
-    <xs:extension base="xs:string">
-      <xs:attribute ref="href" use="required"/>
-      <xs:attribute ref="added" use="required"/>
-      <xs:attribute ref="modified" use="required"/>
-      <xs:attribute ref="visited" use="required"/>
-    </xs:extension>
-  </xs:simpleContent>
-</xs:complexType>
-
-<xs:complexType name="applicationsType">
-    <xs:sequence>
-      <xs:element name="application" type="applicationType" minOccurs="0" />
-    </xs:sequence>
-</xs:complexType>
-
 <xs:complexType name="metadataType">
-  <xs:all>
-  <xs:element name="mime-type" type="mime:mimeType" maxOccurs="1" minOccurs="1" />
-  <xs:element name="info" type="xs:string" maxOccurs="1" minOccurs="1" />
-  <xs:element name="icon" type="xs:string" maxOccurs="1" minOccurs="0" />
-  <xs:element name="groups" type="groupsType" maxOccurs="1" minOccurs="0" />
-  <xs:element name="applications" type="applicationsType" maxOccurs="1" minOccurs="0" />
-  <xs:element name="private" type="xs:boolean" maxOccurs="1" minOccurs="0" />
-  </xs:all>
+  <xs:sequence>
+      <xs:element ref="mime:mime-type" maxOccurs="1" minOccurs="1" />
+      <xs:element name="icon" type="xs:string" maxOccurs="1" minOccurs="0" />
+      <xs:element ref="bookmark:groups" maxOccurs="1" minOccurs="0" />
+      <xs:element ref="bookmark:applications" maxOccurs="1" minOccurs="0" />
+      <xs:element name="private" type="xs:boolean" maxOccurs="1" minOccurs="0" />
+  </xs:sequence>
   <xs:attribute ref="owner" use="required"/>
 </xs:complexType>
 
