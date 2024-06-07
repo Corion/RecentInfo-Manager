@@ -2,6 +2,7 @@ package RecentInfo::Entry 0.01;
 use 5.020;
 use Moo 2;
 use experimental 'signatures';
+use Carp 'croak';
 
 #has ['href', 'display_name', 'description'] => (
 has ['href'] => (
@@ -63,7 +64,10 @@ sub as_XML_fragment($self, $doc) {
 
 sub from_XML_fragment( $class, $frag ) {
     my $meta = $xpc->findnodes('./info[1]/metadata', $frag)->[0];
-
+    if(! $meta) {
+        warn $frag->toString;
+        croak "Invalid xml?! No <info>/<metadata> element found"
+    };
     my %meta = (
         mime_type => $xpc->find('./mime:mime-type/@type', $meta)->[0]->nodeValue,
     );
