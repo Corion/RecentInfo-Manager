@@ -47,7 +47,17 @@ sub load( $self, $recent=$self->filename ) {
     my $doc = XML::LibXML
                   ->new( load_ext_dtd => 0, keep_blanks => 1, expand_entities => 0, )
                   ->load_xml( location => $recent );
+    return $self->_parse( $doc );
+}
 
+sub fromString( $self, $xml ) {
+    my $doc = XML::LibXML
+                  ->new( load_ext_dtd => 0, keep_blanks => 1, expand_entities => 0, )
+                  ->load_xml( string => \$xml );
+    return $self->_parse( $doc );
+}
+
+sub _parse( $self, $doc ) {
     # Just to make sure we read in valid(ish) data
     #validate_xml( $doc );
     # Parse our tree from the document, instead of using the raw XML
