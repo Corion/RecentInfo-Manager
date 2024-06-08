@@ -208,7 +208,18 @@ sub save( $self, $filename=$self->filename ) {
 
 sub add_recent_file($filename, $file_options={}, $options={}) {
     my $mgr = RecentInfo::Manager->new(%$options);
-    $mgr->add( $filename => $file_options );
+
+    if( ! ref $filename ) {
+        $filename = [ [$filename => $file_options] ];
+    }
+
+    my @files = map {
+        ! ref $_ ? [$_ => $file_options] : $_
+    } $filename->@*;
+
+    for my $f (@files) {
+        $mgr->add( $f->@* );
+    };
     $mgr->save();
 };
 

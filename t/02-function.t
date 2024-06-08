@@ -30,4 +30,8 @@ is \@other, [], "Recent files for another program are empty with appname initial
 @other = recent_files({ app => 'bar' }, { filename => $name });
 is \@other, [], "Recent files for another program are empty with appname as parameter";
 
+add_recent_file([$0, $0], undef, { filename => $name });
+my @new = recent_files(undef, { filename => $name });
+is scalar @new, 1, "Adding the same file multiple times keeps the number the same";
+
 done_testing;
