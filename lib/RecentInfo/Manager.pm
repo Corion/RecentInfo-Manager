@@ -39,7 +39,7 @@ has 'exec' => (
 );
 
 has 'entries' => (
-    is => 'ro',
+    is => 'lazy',
     default => \&load,
 );
 
