@@ -16,6 +16,16 @@ use RecentInfo::Entry;
 use RecentInfo::Application;
 use RecentInfo::GroupEntry;
 
+use Exporter 'import';
+our @EXPORT_OK = (qw(add_recent_file recent_files));
+
+=head1 SYNOPSIS
+
+  use RecentInfo::Manager 'add_recent_file';
+  add_recent_file('output.pdf');
+
+=cut
+
 # Split up later into ::XBEL and ::Windows, and make this a factory (plus a role maybe)
 # For Windows, those live as links under $ENV{APPDATA}\Microsoft\Windows\Recent
 # similar information can be synthesized from there
@@ -189,10 +199,40 @@ sub toString( $self ) {
 
 sub save( $self, $filename=$self->filename ) {
     my $str = $self->toString;
-
     my $fh = IO::AtomicFile->open( $filename, '>:raw' );
     print $fh $str;
     $fh->close;
 }
+
+# Maybe this should go into RecentInfo::Utils RecentInfo::Functions ?!
+
+sub add_recent_file($filename, $file_options={}, $options={}) {
+    my $mgr = RecentInfo::Manager->new(%$options);
+    $mgr->add( $filename => $file_options );
+    $mgr->save();
+};
+
+sub mime_match( $type, $pattern ) {
+    $pattern =~ s/\*/.*/g;
+    $type =~ /$pattern/
+}
+
+sub recent_files($recent_options=undef, $options={}) {
+    my $mgr = RecentInfo::Manager->new(%$options);
+    $recent_options //= {
+        app => $mgr->app,
+    };
+
+    my $appname = $recent_options->{app};
+    my $mimetype = $recent_options->{mime_type};
+
+    my @res = map { $_->href } grep {
+          defined $appname ? grep { $_->name eq $appname } $_->applications->@*
+        : defined $mimetype ? mime_match( $_->mime_type, $mimetype )
+        : 1
+    } $mgr->entries->@*;
+
+    return @res
+};
 
 1;
