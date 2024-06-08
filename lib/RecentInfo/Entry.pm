@@ -53,8 +53,11 @@ sub as_XML_fragment($self, $doc) {
     $metadata->setAttribute('owner' => 'http://freedesktop.org' );
     # Should we allow this to be empty, or should we leave it out completely then?!
 
-    for my $other ($self->othermeta->@* ) {
-        $info->addChild( $other );
+    if ($self->othermeta->@* ) {
+        my $parser = XML::LibXML->new();
+        for my $other ($self->othermeta->@* ) {
+            $info->addChild( $parser->parse_balanced_chunk( $other, 'UTF-8' )->firstChild);
+        }
     };
 
     if( $self->groups->@* ) {
@@ -80,7 +83,7 @@ sub from_XML_fragment( $class, $frag ) {
     };
 
     my $othermeta = $xpc->findnodes('./info[1]/metadata[@owner!="http://freedesktop.org"]', $frag);
-    my @othermeta = map { $_->cloneNode(1) } $othermeta->@*;
+    my @othermeta = map { $_->toString } $othermeta->@*;
 
     my %meta = (
         mime_type => $xpc->find('./mime:mime-type/@type', $meta)->[0]->nodeValue,
