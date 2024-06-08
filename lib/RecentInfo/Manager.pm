@@ -54,7 +54,7 @@ has 'entries' => (
 );
 
 sub load( $self, $recent=$self->filename ) {
-    if( -f $recent && -s _ ) {
+    if( defined $recent && -f $recent && -s _ ) {
         my $doc = XML::LibXML
                       ->new( load_ext_dtd => 0, keep_blanks => 1, expand_entities => 0, )
                       ->load_xml( location => $recent );
