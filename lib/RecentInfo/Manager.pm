@@ -17,7 +17,7 @@ use RecentInfo::Application;
 use RecentInfo::GroupEntry;
 
 use Exporter 'import';
-our @EXPORT_OK = (qw(add_recent_file recent_files));
+our @EXPORT_OK = (qw(add_recent_file remove_recent_file recent_files));
 
 =head1 SYNOPSIS
 
@@ -91,7 +91,8 @@ sub _parse( $self, $doc ) {
 }
 
 sub find( $self, $href ) {
-    # This is case sensitive, which might be unexpected on Windows...
+    # This is case sensitive, which might be unexpected on Windows
+    # and case-insensitive filesystems in general...
     first { $_->href eq $href } $self->entries->@*;
 }
 
@@ -166,6 +167,38 @@ sub add( $self, $filename, $info = {} ) {
     return $res
 }
 
+=head2 C<< ->remove $filename >>
+
+  $mgr->remove('output.pdf');
+
+Removes the filename from the list of recently used files.
+
+=cut
+
+sub remove( $self, $filename ) {
+    $filename = File::Spec->rel2abs($filename);
+
+    # Ugh - do we really want to do this?!
+    my $href = "file://$filename";
+
+    my $res;
+
+    $self->entries->@* = map {
+        if( $_->href eq $href ) {
+            $res = $_;
+            (); # discard the item
+        } else {
+            say $_->href;
+            say $href;
+            $_; # keep the item
+        }
+    } $self->entries->@*;
+
+    $self->entries->@* = sort { $a->visited cmp $b->visited } $self->entries->@*;
+
+    return $res
+}
+
 sub toString( $self ) {
     my $doc = XML::LibXML::Document->new('1.0', 'UTF-8');
     my $xbel = $doc->createElement('xbel');
@@ -219,6 +252,21 @@ sub add_recent_file($filename, $file_options={}, $options={}) {
 
     for my $f (@files) {
         $mgr->add( $f->@* );
+    };
+    $mgr->save();
+};
+
+sub remove_recent_file($filename, $options={}) {
+    my $mgr = RecentInfo::Manager->new(%$options);
+
+    if( ! ref $filename ) {
+        $filename = [ $filename ];
+    }
+
+    my @files = $filename->@*;
+
+    for my $f (@files) {
+        $mgr->remove( $f );
     };
     $mgr->save();
 };
