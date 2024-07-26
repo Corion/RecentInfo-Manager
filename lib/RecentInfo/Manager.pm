@@ -11,7 +11,6 @@ use List::Util 'first';
 use File::Spec;
 use File::Basename;
 
-use MIME::Detect;
 use RecentInfo::Entry;
 use RecentInfo::Application;
 use RecentInfo::GroupEntry;
