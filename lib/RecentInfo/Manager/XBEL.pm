@@ -27,7 +27,7 @@ use MIME::Detect;
 
 =cut
 
-has 'filename' => (
+has 'recent_path' => (
     is => 'lazy',
     default => sub { File::Spec->catfile( $ENV{ XDG_DATA_HOME }, 'recently-used.xbel' )},
 );
@@ -47,7 +47,7 @@ has 'entries' => (
     default => \&load,
 );
 
-sub load( $self, $recent=$self->filename ) {
+sub load( $self, $recent=$self->recent_path ) {
     if( defined $recent && -f $recent && -s _ ) {
         my $doc = XML::LibXML
                       ->new( load_ext_dtd => 0, keep_blanks => 1, expand_entities => 0, )
@@ -224,7 +224,7 @@ sub toString( $self ) {
     return $str
 }
 
-sub save( $self, $filename=$self->filename ) {
+sub save( $self, $filename=$self->recent_path ) {
     my $str = $self->toString;
     my $fh = IO::AtomicFile->open( $filename, '>:raw' );
     print $fh $str;
