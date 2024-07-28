@@ -11,11 +11,23 @@ our @EXPORT_OK = (qw(add_recent_file remove_recent_file recent_files));
   use RecentInfo::Manager 'add_recent_file';
   add_recent_file('output.pdf');
 
+  # oo interface
+  my $mgr = RecentInfo::Manager->new();
+  $mgr->load();
+  $mgr->add('output.pdf');
+  $mgr->save;
+
+=head1 FUNCTIONS
+
+=head2 C<< add_recent_file $filename, $file_options >>
+
+  add_recent_file( 'output.pdf', { mime_type => 'application/pdf' } );
+
+Adds C<output.pdf> as a recently used (or created) file for the current
+application. If the MIME filetype is not given, it is inferred from
+the filename.
+
 =cut
-
-# For Windows, those live as links under $ENV{APPDATA}\Microsoft\Windows\Recent
-# similar information can be synthesized from there
-
 
 sub add_recent_file($filename, $file_options={}, $options={}) {
     my $mgr = RecentInfo::Manager->new(%$options);
@@ -33,6 +45,14 @@ sub add_recent_file($filename, $file_options={}, $options={}) {
     };
     $mgr->save();
 };
+
+=head2 C<< remove_recent_file $filename >>
+
+  remove_recent_file( 'oops.xls' );
+
+Removes the given file from the list of recently accessed files.
+
+=cut
 
 sub remove_recent_file($filename, $options={}) {
     my $mgr = RecentInfo::Manager->new(%$options);
@@ -54,6 +74,23 @@ sub mime_match( $type, $pattern ) {
     $type =~ /$pattern/
 }
 
+=head2 C<< recent_files $options >>
+
+  my @entries = recent_files( { mime_type => 'application/pdf' });
+
+Returns a list of L<RecentInfo::Entry> objects for the recently accessed files.
+In the options hash, you can pass in the following keys:
+
+=over 4
+
+=item B<mime_type> - search for the given MIME type. C<*> is a wildcard.
+
+=item B<app> - search for the given application name.
+
+=back
+
+=cut
+
 sub recent_files($recent_options=undef, $options={}) {
     my $mgr = RecentInfo::Manager->new(%$options);
     $recent_options //= {
@@ -71,6 +108,19 @@ sub recent_files($recent_options=undef, $options={}) {
 
     return @res
 };
+
+=head1 METHODS
+
+The module also acts as a factory for OS-specific implementations.
+
+=head2 C<< ->new >>
+
+  my $mgr = RecentInfo::Manager->new();
+  $mgr->load();
+  $mgr->add('output.pdf');
+  $mgr->save;
+
+=cut
 
 our $implementation;
 sub new($factoryclass, @args) {
@@ -93,3 +143,7 @@ sub _best_implementation( $class, @candidates ) {
 };
 
 1;
+
+=head1 SEE ALSO
+
+=cut
