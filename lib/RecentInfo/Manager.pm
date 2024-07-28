@@ -3,6 +3,7 @@ use 5.020;
 use experimental 'signatures';
 
 use Exporter 'import';
+use Module::Load;
 our @EXPORT_OK = (qw(add_recent_file remove_recent_file recent_files));
 
 =head1 SYNOPSIS
@@ -15,10 +16,6 @@ our @EXPORT_OK = (qw(add_recent_file remove_recent_file recent_files));
 # For Windows, those live as links under $ENV{APPDATA}\Microsoft\Windows\Recent
 # similar information can be synthesized from there
 
-sub new( $package, @args ) {
-    require RecentInfo::Manager::XBEL;
-    RecentInfo::Manager::XBEL->new( @args )
-}
 
 sub add_recent_file($filename, $file_options={}, $options={}) {
     my $mgr = RecentInfo::Manager->new(%$options);
@@ -73,6 +70,26 @@ sub recent_files($recent_options=undef, $options={}) {
     } $mgr->entries->@*;
 
     return @res
+};
+
+our $implementation;
+sub new($factoryclass, @args) {
+    $implementation //= $factoryclass->_best_implementation();
+
+    # return a new instance
+    $implementation->new(@args);
+}
+
+sub _best_implementation( $class, @candidates ) {
+    my $impl;
+    if( $^O =~ /cygwin|MSWin32/ ) {
+        $impl = 'RecentInfo::Manager::Win32';
+    } else {
+        $impl = 'RecentInfo::Manager::XBEL';
+    }
+
+    load $impl;
+    return $impl;
 };
 
 1;
