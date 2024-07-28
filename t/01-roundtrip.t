@@ -2,7 +2,7 @@
 use 5.020;
 use Test2::V0 -no_srand;
 use XML::LibXML;
-use RecentInfo::Manager;
+use RecentInfo::Manager::XBEL;
 use experimental 'try', 'signatures';
 use stable 'postderef';
 
@@ -41,7 +41,7 @@ for my $test (@tests) {
     };
     valid_xml( $xml, "The input XML is valid" );
 
-    my $xbel = RecentInfo::Manager->new( filename => undef );
+    my $xbel = RecentInfo::Manager::XBEL->new( filename => undef );
     my $bm = $xbel->fromString( $test->{xbel});
     $xbel->entries->@* = $bm->@*;
 
@@ -72,7 +72,7 @@ for my $test (@tests) {
 
     is $x1, $x2, "The strings are identical";
 
-    my $reconstructed = RecentInfo::Manager->new( filename => undef );
+    my $reconstructed = RecentInfo::Manager::XBEL->new( filename => undef );
     $bm = $reconstructed->fromString( $xml );
     $reconstructed->entries->@* = $bm->@*;
 
