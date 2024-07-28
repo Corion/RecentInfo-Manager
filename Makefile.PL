@@ -57,8 +57,8 @@ my %module = (
     },
 
     PREREQ_PM => {
-        'experimental'             => '0.32',
-        'stable'                   => '0.32', # same as experimental.pm, but my tets infrastructure wants it explicitly
+        'experimental'             => '0.032',
+        'stable'                   => '0.032', # same as experimental.pm, but my tets infrastructure wants it explicitly
         'Exporter'                 => 5, # for 'import'
         'PerlX::Maybe'             => 0,
         'Carp'                     => 0,
