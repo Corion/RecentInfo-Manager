@@ -4,7 +4,6 @@ use Moo 2;
 use experimental 'signatures';
 use Carp 'croak';
 
-#has ['href', 'display_name', 'description'] => (
 has ['href'] => (
     is => 'ro',
     required => 1,
@@ -38,12 +37,19 @@ $xpc->registerNs( mime     => "http://www.freedesktop.org/standards/shared-mime-
 sub as_XML_fragment($self, $doc) {
     my $bookmark = $doc->createElement('bookmark');
     $bookmark->setAttribute( 'href' => $self->href );
-    #$bookmark->setAttribute( 'app' => $self->app );
-    # XXX Make sure to validate that $modified, $visited etc. are proper DateTime strings
-    $bookmark->setAttribute( 'added' => $self->added );
-    $bookmark->setAttribute( 'modified' => $self->modified );
-    $bookmark->setAttribute( 'visited' => $self->visited );
-    #$bookmark->setAttribute( 'exec' => "'perl %u'" );
+    # Validate that $modified, $visited etc. are proper DateTime strings
+    # We enforce here a Z timezone
+
+    for my $attr (qw(added modified visited )) {
+        my $at = $self->$attr;
+
+        # Sanity check that we add an UTC timestamp to the XBEL structure
+        if( $at !~ /\A\d\d\d\d-[012]\d-[0123]\dT[012]\d:[0-5]\d:[0-6]\d(?:\.\d+)?Z\z/ ) {
+            croak "Invalid time format in '$attr': $at";
+        };
+
+        $bookmark->setAttribute( $attr => $self->$attr );
+    };
     my $info = $bookmark->addNewChild( undef, 'info' );
     my $metadata = $info->addNewChild( undef, 'metadata' );
     #my $mime = $metadata->addNewChild( 'mime', 'mime-type' );
