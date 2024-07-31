@@ -63,6 +63,7 @@ my %module = (
         'PerlX::Maybe'             => 0,
         'Carp'                     => 0,
         'Module::Load'             => 0,
+        'Moo'                      => 2,
         'XML::LibXML'              => 0, # for XBEL parsing
         'XML::LibXML::PrettyPrint' => 0, # for XBEL parsing
         @windows_prereqs,

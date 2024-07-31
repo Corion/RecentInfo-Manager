@@ -22,6 +22,7 @@ requires:
   Carp: '0'
   Exporter: '5'
   Module::Load: '0'
+  Moo: '2'
   PerlX::Maybe: '0'
   XML::LibXML: '0'
   XML::LibXML::PrettyPrint: '0'
