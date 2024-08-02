@@ -66,6 +66,7 @@ my %module = (
         'Moo'                      => 2,
         'XML::LibXML'              => 0, # for XBEL parsing
         'XML::LibXML::PrettyPrint' => 0, # for XBEL parsing
+        'IO::AtomicFile'           => 0, # for XBEL writing
         @windows_prereqs,
     },
     TEST_REQUIRES => {

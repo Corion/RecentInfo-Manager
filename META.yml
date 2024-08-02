@@ -21,6 +21,7 @@ no_index:
 requires:
   Carp: '0'
   Exporter: '5'
+  IO::AtomicFile: '0'
   Module::Load: '0'
   Moo: '2'
   PerlX::Maybe: '0'
