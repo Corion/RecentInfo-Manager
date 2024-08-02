@@ -62,11 +62,17 @@ my %module = (
         'Exporter'                 => 5, # for 'import'
         'PerlX::Maybe'             => 0,
         'Carp'                     => 0,
+        'File::Basename'           => 0,
+        'File::Spec'               => 0,
+        'List::Util'               => 0,
+        'MIME::Detect'             => 0,
         'Module::Load'             => 0,
         'Moo'                      => 2,
         'XML::LibXML'              => 0, # for XBEL parsing
         'XML::LibXML::PrettyPrint' => 0, # for XBEL parsing
         'IO::AtomicFile'           => 0, # for XBEL writing
+        'Date::Format::ISO8601'    => 0,
+
         @windows_prereqs,
     },
     TEST_REQUIRES => {

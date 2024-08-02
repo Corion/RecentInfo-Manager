@@ -20,8 +20,13 @@ no_index:
     - inc
 requires:
   Carp: '0'
+  Date::Format::ISO8601: '0'
   Exporter: '5'
+  File::Basename: '0'
+  File::Spec: '0'
   IO::AtomicFile: '0'
+  List::Util: '0'
+  MIME::Detect: '0'
   Module::Load: '0'
   Moo: '2'
   PerlX::Maybe: '0'
