@@ -6,12 +6,15 @@ use Getopt::Long;
 use Pod::Usage;
 use RecentInfo::Manager 'recent_files';
 use PerlX::Maybe;
+use URI;
+use URI::file;
 
 GetOptions(
-    'f|file=s' => \my $filename,
-    'a|app=s' => \my $app,
+    'f|file=s'     => \my $filename,
+    'a|app=s'      => \my $app,
     't|mimetype=s' => \my $mimetype,
-    'n|count=s' => \my $count,
+    'n|count=s'    => \my $count,
+    'native'       => \my $native,
 ) or pod2usage(2);
 
 my @res = recent_files({
@@ -24,4 +27,11 @@ my @res = recent_files({
 if( $count and @res ) {
     @res = splice @res, -$count;
 }
+
+if( $native ) {
+    @res = map {
+        m!^file:! ? URI->new( $_ )->file : $_
+    } @res;
+}
+
 say $_ for @res;

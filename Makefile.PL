@@ -74,6 +74,7 @@ my %module = (
         'XML::LibXML::PrettyPrint' => 0, # for XBEL parsing
         'IO::AtomicFile'           => 0, # for XBEL writing
         'Date::Format::ISO8601'    => 0,
+        'URI::file'                => 0,
 
         @windows_prereqs,
     },
