@@ -52,6 +52,7 @@ my %module = (
     'LICENSE'=> 'artistic_2',
 
     PL_FILES            => {},
+    EXE_FILES            => [glob('scripts/*')],
     BUILD_REQUIRES => {
         'ExtUtils::MakeMaker' => 0,
     },
