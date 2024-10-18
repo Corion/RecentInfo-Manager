@@ -1,6 +1,7 @@
 package RecentInfo::Entry 0.01;
 use 5.020;
 use Moo 2;
+use XML::LibXML;
 use experimental 'signatures';
 use Carp 'croak';
 
