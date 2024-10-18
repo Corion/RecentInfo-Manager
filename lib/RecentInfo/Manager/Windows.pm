@@ -2,6 +2,7 @@ package RecentInfo::Manager::Windows 0.01;
 use 5.020;
 use Moo 2;
 use experimental 'signatures';
+use Carp 'croak';
 
 use Date::Format::ISO8601 'gmtime_to_iso8601_datetime';
 use List::Util 'first';
@@ -13,7 +14,9 @@ use RecentInfo::Application;
 use RecentInfo::GroupEntry;
 
 use Win32;
+use Win32::Shortcut;
 use Win32API::RecentFiles 'SHAddToRecentDocsA', 'SHAddToRecentDocsW';
+use Win32::TieRegistry;
 
 =head1 SYNOPSIS
 
@@ -48,7 +51,7 @@ has 'entries' => (
 
 sub load( $self, $recent=$self->recent_path ) {
     if( defined $recent && -e $recent ) {
-        opendir my $dh, $recent;
+        opendir my( $dh), $recent or croak "Can't read '$recent': $!";
         my @entries = grep { !/\A\.\.?\z/ } readdir( $dh );
         return $self->_parse( \@entries );
     } else {
@@ -56,37 +59,68 @@ sub load( $self, $recent=$self->recent_path ) {
     }
 }
 
-sub _parse( $self, $doc ) {
+sub _mime_type_from_name( $fn ) {
+    state $filetypes = $Registry->{"HKEY_CLASSES_ROOT"};
+    my $mime_type;
+    if( $fn =~ /(\.[^.]+)\z/) {
+        my $ft = $filetypes->{ $1 };
+        if( $ft and my $ct = $ft->{"Content Type"}) {
+            $mime_type = $ct;
+        };
+    };
+    return $mime_type;
+}
+
+# Assumes that the filename is in the current codepage?!
+sub _entry_from_Windows_shortcut( $self, $fn ) {
+    my $link = Win32::Shortcut->new($fn);
+    my @linkstat = stat $fn;
+    my $target = $link->Path;
+    my @stat = stat $target;
+    my $mime_type = _mime_type_from_name( $fn ) // 'application/octet-stream';
+    
+    my $res = RecentInfo::Entry->new(
+        href => $target,
+        added => $linkstat[9],
+        visited => $linkstat[9],
+        modified => $stat[9],
+        mime_type => $mime_type,
+        # app ?
+    );
+    $link->Close;
+    return $res
+}
+
+sub _parse( $self, $entries ) {
 
     my @bookmarks = map {
-            RecentInfo::Entry->from_Windows_link( $_ )
-        }
-    } $doc->@*;
+        $self->_entry_from_Windows_shortcut( $_ )
+    } $entries->@*;
 
     return \@bookmarks;
 }
 
 sub find( $self, $href ) {
-    first { $_->href fc $href } $self->entries->@*;
+    first { fc($_->href) eq fc($href) } $self->entries->@*;
 }
 
 sub add( $self, $filename, $info = {} ) {
 
     if( ! exists $info->{mime_type}) {
-        # XXX find this from the registry
-        state $md = MIME::Detect->new();
-        $info->{mime_type} = $md->mime_type_from_name($filename) // 'application/octet-stream';
+        $info->{mime_type} = _mime_type_from_name($filename) // 'application/octet-stream';
     };
 
     $filename = File::Spec->rel2abs($filename);
-    SHAddToRecentDocsA($f);
     
-    my $fn = "fände.txt";
-    SHAddToRecentDocsW($fn);
-
-    # Ugh - do we really want to do this?!
-    my $href = "file://$filename";
-
+    if( utf8::is_utf8($filename) ) {
+        # Assume the filename is UTF-8
+        SHAddToRecentDocsU($filename);
+    } else {
+        # Assume the filename is as returned from some Windows API or file
+        # in the current codepage. This might or might not be Latin-1.
+        SHAddToRecentDocsA($filename);
+    };
+    
     my ($added, $modified);
     if( $info->{modified}) {
         $modified = gmtime_to_iso8601_datetime( $modified );
@@ -101,22 +135,27 @@ sub add( $self, $filename, $info = {} ) {
     my $app = $info->{app};
     my $exec = $info->{exec};
 
-    my $res = $self->find($href);
+    # Remove the entry from our list if it is in there
+    #my $res = $self->find($href);
+    my $res = $self->find($filename);
+    if( $res ) {
+        $self->entries->@* = grep { $_ != $res } $self->entries->@*;
+    };
 
-        $added //= gmtime_to_iso8601_datetime( $info->{when} );
-        $modified //= gmtime_to_iso8601_datetime( $info->{when} );
-        $res = RecentInfo::Entry->new(
-            href         =>"file://$filename",
-            mime_type    => $mime_type,
-            added        => $added,
-            modified     => $modified,
-            visited      => $when,
-            applications => [RecentInfo::Application->new( name => $app, exec => $exec, count => 1, modified => $when )],
-            groups       => [RecentInfo::GroupEntry->new( group => $app )],
-        );
-        push $self->entries->@*, $res;
+    $added //= gmtime_to_iso8601_datetime( $info->{when} );
+    $modified //= gmtime_to_iso8601_datetime( $info->{when} );
+    $res = RecentInfo::Entry->new(
+        href         =>"file://$filename",
+        mime_type    => $mime_type,
+        added        => $added,
+        modified     => $modified,
+        visited      => $when,
+        applications => [RecentInfo::Application->new( name => $app, exec => $exec, count => 1, modified => $when )],
+        groups       => [RecentInfo::GroupEntry->new( group => $app )],
+    );
+    push $self->entries->@*, $res;
 
-    $self->entries->@* = sort { $a->visited cmp $b->visited } $self->entries->@*;
+    $self->entries->@* = sort { ($a->visited // '') cmp ($b->visited // '') } $self->entries->@*;
 
     return $res
 }
@@ -131,13 +170,12 @@ Removes the filename from the list of recently used files.
 
 sub remove( $self, $filename ) {
     $filename = basename( $filename );
+    my $recent = $self->recent_path;
     
     unlink Win32::GetANSIPathName("$recent/$filename.lnk");
 
     # re-read ->entries
-    $self->load($self->recent_path);
-
-    return $res
+    $self->load($recent);
 }
 
 sub save( $self, $filename=$self->recent_path ) {

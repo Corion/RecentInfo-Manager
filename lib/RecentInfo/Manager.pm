@@ -133,7 +133,7 @@ sub new($factoryclass, @args) {
 sub _best_implementation( $class, @candidates ) {
     my $impl;
     if( $^O =~ /cygwin|MSWin32/ ) {
-        $impl = 'RecentInfo::Manager::Win32';
+        $impl = 'RecentInfo::Manager::Windows';
     } else {
         $impl = 'RecentInfo::Manager::XBEL';
     }
