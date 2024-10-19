@@ -74,16 +74,17 @@ sub _mime_type_from_name( $fn ) {
 # Assumes that the filename is in the current codepage?!
 sub _entry_from_Windows_shortcut( $self, $fn ) {
     my $link = Win32::Shortcut->new($fn);
-    my @linkstat = stat $fn;
+    #my @linkstat = stat $fn;
     my $target = $link->Path;
-    my @stat = stat $target;
+    return unless $target;
+    #my @stat = stat $target;
     my $mime_type = _mime_type_from_name( $fn ) // 'application/octet-stream';
     
     my $res = RecentInfo::Entry->new(
         href => $target,
-        added => $linkstat[9],
-        visited => $linkstat[9],
-        modified => $stat[9],
+        #added => $linkstat[9],
+        #visited => $linkstat[9],
+        #modified => $stat[9],
         mime_type => $mime_type,
         # app ?
     );

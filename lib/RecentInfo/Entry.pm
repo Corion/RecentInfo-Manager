@@ -11,8 +11,10 @@ has ['href'] => (
 );
 
 has ['added', 'visited', 'modified'] => (
-    is => 'rw',
-    required => 1,
+    is => 'lazy',
+    default => sub($self) {
+        (stat($self->{href}))[9]
+    }
 );
 
 has ['mime_type'] => (
