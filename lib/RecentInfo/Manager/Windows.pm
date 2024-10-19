@@ -52,9 +52,10 @@ has 'entries' => (
 sub load( $self, $recent=$self->recent_path ) {
     if( defined $recent && -e $recent ) {
         opendir my( $dh), $recent or croak "Can't read '$recent': $!";
-        my @entries = grep { !/\A\.\.?\z/ } readdir( $dh );
+        my @entries = map { "$recent\\$_" } grep { !/\A\.\.?\z/ } readdir( $dh );
         return $self->_parse( \@entries );
     } else {
+        warn "Empty? $recent";
         return [];
     }
 }
