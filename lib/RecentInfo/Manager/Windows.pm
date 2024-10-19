@@ -122,43 +122,9 @@ sub add( $self, $filename, $info = {} ) {
         SHAddToRecentDocsA($filename);
     };
     
-    my ($added, $modified);
-    if( $info->{modified}) {
-        $modified = gmtime_to_iso8601_datetime( $modified );
-    };
-    if( $info->{added}) {
-        $added = gmtime_to_iso8601_datetime( $added );
-    };
-
-    # Take added from existing entry
-    my $when = gmtime_to_iso8601_datetime( $info->{when} );
-    my $mime_type = $info->{mime_type};
-    my $app = $info->{app};
-    my $exec = $info->{exec};
-
-    # Remove the entry from our list if it is in there
-    #my $res = $self->find($href);
-    my $res = $self->find($filename);
-    if( $res ) {
-        $self->entries->@* = grep { $_ != $res } $self->entries->@*;
-    };
-
-    $added //= gmtime_to_iso8601_datetime( $info->{when} );
-    $modified //= gmtime_to_iso8601_datetime( $info->{when} );
-    $res = RecentInfo::Entry->new(
-        href         =>"file://$filename",
-        mime_type    => $mime_type,
-        added        => $added,
-        modified     => $modified,
-        visited      => $when,
-        applications => [RecentInfo::Application->new( name => $app, exec => $exec, count => 1, modified => $when )],
-        groups       => [RecentInfo::GroupEntry->new( group => $app )],
-    );
-    push $self->entries->@*, $res;
-
-    $self->entries->@* = sort { ($a->visited // '') cmp ($b->visited // '') } $self->entries->@*;
-
-    return $res
+    # re-read ->entries
+    my $recent = $self->recent_path;
+    $self->load($recent);
 }
 
 =head2 C<< ->remove $filename >>
