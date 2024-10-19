@@ -21,6 +21,7 @@ my @windows_prereqs;
 if( $^O =~ /cygwin|MSWin32/ ) {
     @windows_prereqs = (
         'Win32API::RecentFiles' => '0.01',
+        'Win32::Shortcut' => '0.01',
     );
 }
 
