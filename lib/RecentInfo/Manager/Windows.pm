@@ -131,7 +131,8 @@ sub add( $self, $filename, $info = {} ) {
 
     # re-read ->entries
     my $recent = $self->recent_path;
-    $self->load($recent);
+    delete $self->{entries};
+    # $self->load($recent);
 }
 
 =head2 C<< ->remove $filename >>
@@ -149,7 +150,8 @@ sub remove( $self, $filename ) {
     unlink Win32::GetANSIPathName("$recent/$filename.lnk");
 
     # re-read ->entries
-    $self->load($recent);
+    delete $self->{entries};
+    # $self->load($recent);
 }
 
 sub save( $self, $filename=$self->recent_path ) {
