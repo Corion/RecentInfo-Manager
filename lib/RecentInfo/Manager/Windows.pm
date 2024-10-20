@@ -78,16 +78,15 @@ sub _mime_type_from_name( $fn ) {
 # Assumes that the filename is in the current codepage?!
 sub _entry_from_Windows_shortcut( $self, $fn ) {
     my $link = Win32::Shortcut->new($fn);
-    #my @linkstat = stat $fn;
+    my @linkstat = stat $fn;
     my $target = $link->Path;
     return unless $target; # we only list entries with a filename/directory name
     return if -d $target; # we only list files, not directories
-    #my @stat = stat $target;
     my $mime_type = _mime_type_from_name( $fn ) // 'application/octet-stream';
-    
+
     my $res = RecentInfo::Entry->new(
         href => $target,
-        #added => $linkstat[9],
+        added => $linkstat[9],
         #visited => $linkstat[9],
         #modified => $stat[9],
         mime_type => $mime_type,
@@ -98,8 +97,9 @@ sub _entry_from_Windows_shortcut( $self, $fn ) {
 }
 
 sub _parse( $self, $entries ) {
-
-    my @bookmarks = map {
+    my @bookmarks = sort {
+        $a->added <=> $b->added
+    } map {
         $self->_entry_from_Windows_shortcut( $_ )
     } $entries->@*;
 
