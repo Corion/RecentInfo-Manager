@@ -33,9 +33,10 @@ has 'recent_path' => (
     default => sub { Win32::GetFolderPath(Win32::CSIDL_RECENT()) },
 );
 
+# On Windows, app has no meaning
 has 'app' => (
     is => 'lazy',
-    default => sub { basename $0 },
+    default => sub { undef },
 );
 
 # XXX should be read from the registry instead
