@@ -99,7 +99,6 @@ sub recent_files($recent_options=undef, $options={}) {
 
     my $appname = $recent_options->{app};
     my $mimetype = $recent_options->{mime_type};
-
     my @res = map { $_->href } grep {
           defined $appname ? grep { $_->name eq $appname } $_->applications->@*
         : defined $mimetype ? mime_match( $_->mime_type, $mimetype )
@@ -137,7 +136,6 @@ sub _best_implementation( $class, @candidates ) {
     } else {
         $impl = 'RecentInfo::Manager::XBEL';
     }
-
     load $impl;
     return $impl;
 };
