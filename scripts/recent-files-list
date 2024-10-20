@@ -17,9 +17,11 @@ GetOptions(
     'native'       => \my $native,
 ) or pod2usage(2);
 
+$count //= 10;
+
 my @res = recent_files({
     maybe app => $app,
-    maybe mimetype => $mimetype,
+    maybe mime_type => $mimetype,
 }, {
     maybe filename => $filename,
 });
