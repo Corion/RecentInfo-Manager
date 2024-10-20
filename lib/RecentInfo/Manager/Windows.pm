@@ -117,7 +117,7 @@ sub add( $self, $filename, $info = {} ) {
     };
 
     $filename = File::Spec->rel2abs($filename);
-    
+
     if( utf8::is_utf8($filename) ) {
         # Assume the filename is UTF-8
         SHAddToRecentDocsU($filename);
@@ -126,7 +126,7 @@ sub add( $self, $filename, $info = {} ) {
         # in the current codepage. This might or might not be Latin-1.
         SHAddToRecentDocsA($filename);
     };
-    
+
     # re-read ->entries
     my $recent = $self->recent_path;
     $self->load($recent);
@@ -143,7 +143,7 @@ Removes the filename from the list of recently used files.
 sub remove( $self, $filename ) {
     $filename = basename( $filename );
     my $recent = $self->recent_path;
-    
+
     unlink Win32::GetANSIPathName("$recent/$filename.lnk");
 
     # re-read ->entries
