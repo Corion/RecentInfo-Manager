@@ -80,7 +80,7 @@ sub _entry_from_Windows_shortcut( $self, $fn ) {
     my $link = Win32::Shortcut->new($fn);
     #my @linkstat = stat $fn;
     my $target = $link->Path;
-    return unless $target;
+    return unless $target; # we only list entries with a filename/directory name
     #my @stat = stat $target;
     my $mime_type = _mime_type_from_name( $fn ) // 'application/octet-stream';
     
