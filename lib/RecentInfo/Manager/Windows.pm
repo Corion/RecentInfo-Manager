@@ -65,9 +65,11 @@ sub load( $self, $recent=$self->recent_path ) {
 
 sub _mime_type_from_name( $fn ) {
     state $filetypes = $Registry->{"HKEY_CLASSES_ROOT"};
+    state $ft_cache = {};
     my $mime_type;
     if( $fn =~ /(\.[^.]+)\z/) {
-        my $ft = $filetypes->{ $1 };
+        $ft_cache->{ $1 } //= $filetypes->{ $1 };
+        my $ft = $ft_cache->{ $1 };
         if( $ft and my $ct = $ft->{"Content Type"}) {
             $mime_type = $ct;
         };
