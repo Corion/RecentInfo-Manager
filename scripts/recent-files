@@ -51,7 +51,13 @@ if( $command =~ /^--/ ) {
         # Find and list likely alternatives
         die "Unknown command '$command'\n";
     } else {
-        exec $cmd => @args or die $!;
+        # on Windows, use system() so we can still run .bat files synchronously
+        if( $^O eq 'MSWin32' ) {
+            system( $cmd => @args ) == 0
+                or die "$! / $^E";
+        } else {
+            exec $cmd => @args or die $!;
+        }
     }
 }
 
