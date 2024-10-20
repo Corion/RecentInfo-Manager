@@ -45,6 +45,7 @@ if( $command =~ /^--/ ) {
     die "Unknown option '$command'\n";
 
 } else {
+    $command //= 'list'; # our default
 
     my $cmd = find_command( $command );
     if( ! $cmd ) {
