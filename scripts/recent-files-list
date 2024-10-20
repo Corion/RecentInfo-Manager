@@ -28,6 +28,7 @@ if( $count and @res ) {
     @res = splice @res, -$count;
 }
 
+# native should be the default?!
 if( $native ) {
     @res = map {
         m!^file:! ? URI->new( $_ )->file : $_
