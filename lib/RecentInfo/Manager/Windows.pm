@@ -82,7 +82,7 @@ sub _entry_from_Windows_shortcut( $self, $fn ) {
     my $target = $link->Path;
     return unless $target; # we only list entries with a filename/directory name
     return if -d $target; # we only list files, not directories
-    my $mime_type = _mime_type_from_name( $fn ) // 'application/octet-stream';
+    my $mime_type = _mime_type_from_name( $target ) // 'application/octet-stream';
 
     my $res = RecentInfo::Entry->new(
         href => $target,
