@@ -5,6 +5,7 @@ use experimental 'signatures';
 use Getopt::Long;
 use Pod::Usage;
 use RecentInfo::Manager 'add_recent_file';
+use MIME::Detect;
 use PerlX::Maybe;
 
 GetOptions(
@@ -19,6 +20,6 @@ $exec_command //= "$app '%u'";
 my @args = map {
     my $file = $_;
     my $mt = $mime_type // MIME::Detect->new()->mime_type_from_name($file) // 'application/octet-stream';
-    $file => { app => $app, mime_type => $mt };
-};
+    [ $file => { app => $app, mime_type => $mt }]
+} @ARGV;
 add_recent_file(\@args);
