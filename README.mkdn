@@ -34,7 +34,7 @@ Removes the given file from the list of recently accessed files.
 
     my @entries = recent_files( { mime_type => 'application/pdf' });
 
-Returns a list of [RecentInfo::Entry](https://metacpan.org/pod/RecentInfo%3A%3AEntry) objects for the recently accessed files.
+Returns a list of filenames of the recently accessed files.
 In the options hash, you can pass in the following keys:
 
 - **mime\_type** - search for the given MIME type. `*` is a wildcard.

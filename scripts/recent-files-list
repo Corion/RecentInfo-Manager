@@ -14,7 +14,6 @@ GetOptions(
     'a|app=s'      => \my $app,
     't|mimetype=s' => \my $mimetype,
     'n|count=s'    => \my $count,
-    'native'       => \my $native,
 ) or pod2usage(2);
 
 $count //= 10;
@@ -28,13 +27,6 @@ my @res = recent_files({
 
 if( $count and @res ) {
     @res = splice @res, -$count;
-}
-
-# native should be the default?!
-if( $native ) {
-    @res = map {
-        m!^file:! ? URI->new( $_ )->file : $_
-    } @res;
 }
 
 say $_ for @res;

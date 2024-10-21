@@ -4,16 +4,20 @@ use Moo 2;
 use XML::LibXML;
 use experimental 'signatures';
 use Carp 'croak';
+use URI;
 
 has ['href'] => (
     is => 'ro',
     required => 1,
 );
 
-has ['added', 'visited', 'modified'] => (
+has ['added', 'visited'] => (
+    is => 'rw',
+);
+has ['modified'] => (
     is => 'lazy',
     default => sub($self) {
-        (stat($self->{href}))[9]
+        (stat($self->to_native))[9]
     }
 );
 
@@ -32,6 +36,13 @@ has 'othermeta' => (
     is => 'ro',
     default => sub { [] },
 );
+
+sub to_native( $self ) {
+    my $href = $self->href;
+    return $href =~ m!^file:!
+        ? URI->new( $href )->file
+        : $href
+}
 
 state $xpc = XML::LibXML::XPathContext->new();
 $xpc->registerNs( bookmark => "http://www.freedesktop.org/standards/desktop-bookmarks");

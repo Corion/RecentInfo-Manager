@@ -78,7 +78,7 @@ sub mime_match( $type, $pattern ) {
 
   my @entries = recent_files( { mime_type => 'application/pdf' });
 
-Returns a list of L<RecentInfo::Entry> objects for the recently accessed files.
+Returns a list of filenames of the recently accessed files.
 In the options hash, you can pass in the following keys:
 
 =over 4
@@ -99,7 +99,7 @@ sub recent_files($recent_options=undef, $options={}) {
 
     my $appname = $recent_options->{app};
     my $mimetype = $recent_options->{mime_type};
-    my @res = map { $_->href } grep {
+    my @res = map { $_->to_native } grep {
           defined $appname ? grep { $_->name eq $appname } $_->applications->@*
         : defined $mimetype ? mime_match( $_->mime_type, $mimetype )
         : 1
