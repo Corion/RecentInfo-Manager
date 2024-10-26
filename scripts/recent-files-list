@@ -14,16 +14,25 @@ GetOptions(
     'a|app=s'      => \my $app,
     't|mimetype=s' => \my $mimetype,
     'n|count=s'    => \my $count,
+    'b|below:s'    => \my $below,
 ) or pod2usage(2);
 
 $count //= 10;
 
+if( defined $below ) {
+    $below ||= '.';
+    $below = File::Spec->rel2abs( $below );
+}
 my @res = recent_files({
     maybe app => $app,
     maybe mime_type => $mimetype,
 }, {
     maybe filename => $filename,
 });
+
+if( $below ) {
+    @res = grep { m!\A\Q$below! } @res;
+};
 
 if( $count and @res ) {
     @res = splice @res, -$count;
