@@ -49,6 +49,7 @@ has 'exec' => (
 has 'entries' => (
     is => 'lazy',
     default => \&load,
+    clearer => 'clear_entries',
 );
 
 sub load( $self, $recent=$self->recent_path ) {
@@ -132,7 +133,7 @@ sub add( $self, $filename, $info = {} ) {
 
     # re-read ->entries
     my $recent = $self->recent_path;
-    delete $self->{entries};
+    $self->clear_entries;
     # $self->load($recent);
 }
 
@@ -150,8 +151,8 @@ sub remove( $self, $filename ) {
 
     unlink Win32::GetANSIPathName("$recent/$filename.lnk");
 
-    # re-read ->entries
-    delete $self->{entries};
+    # re-read ->entries on next call
+    $self->clear_entries;
     # $self->load($recent);
 }
 
