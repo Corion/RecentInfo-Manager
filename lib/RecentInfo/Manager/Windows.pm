@@ -132,9 +132,7 @@ sub add( $self, $filename, $info = {} ) {
     };
 
     # re-read ->entries
-    my $recent = $self->recent_path;
     $self->clear_entries;
-    # $self->load($recent);
 }
 
 =head2 C<< ->remove $filename >>
@@ -153,7 +151,6 @@ sub remove( $self, $filename ) {
 
     # re-read ->entries on next call
     $self->clear_entries;
-    # $self->load($recent);
 }
 
 sub save( $self, $filename=$self->recent_path ) {
