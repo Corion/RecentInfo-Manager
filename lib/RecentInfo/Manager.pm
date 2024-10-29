@@ -144,4 +144,6 @@ sub _best_implementation( $class, @candidates ) {
 
 =head1 SEE ALSO
 
+L<Mac::RecentDocuments> - recent documents for old MacOS
+
 =cut
