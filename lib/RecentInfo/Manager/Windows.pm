@@ -39,7 +39,8 @@ has 'app' => (
     default => sub { undef },
 );
 
-# XXX should be read from the registry instead
+# This should use ShellExecuteEx instead, but our API is string-based instead
+# of directly executing things ...
 has 'exec' => (
     is => 'lazy',
     default => sub { sprintf "'%s %%u'", $_[0]->app },
