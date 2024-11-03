@@ -18,7 +18,11 @@ find(\&wanted, grep { -d } ($blib));
 
 plan tests => scalar @files;
 foreach my $file (@files) {
-    synopsis_file_ok($file);
+    if( $file !~ /Windows/ or $^O =~ /MSWin32|cygwin/i ) {
+        synopsis_file_ok($file);
+    } else {
+        SKIP: { skip "Skipping $file on $^O", 1 }
+    }
 }
 
 sub wanted {
@@ -29,6 +33,7 @@ sub wanted {
 sub synopsis_file_ok {
     my( $file ) = @_;
     my $name = "SYNOPSIS in $file compiles";
+
     open my $fh, '<', $file
         or die "Couldn't read '$file': $!";
     my @synopsis = map  { s!^\s\s!!; $_ } # outdent all code for here-docs
