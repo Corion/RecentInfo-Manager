@@ -44,7 +44,7 @@ my %module = (
             },
             license    => "https://dev.perl.org/licenses/",
         },
-        dynamic_config   => 0, # we promise to keep META.* up-to-date
+        dynamic_config   => 1, # we have dynamic prerequisites
         x_static_install => 1, # we are pure Perl and don't do anything fancy
     },
 
