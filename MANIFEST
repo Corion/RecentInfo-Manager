@@ -5,6 +5,7 @@ lib/RecentInfo/Application.pm
 lib/RecentInfo/Entry.pm
 lib/RecentInfo/GroupEntry.pm
 lib/RecentInfo/Manager.pm
+lib/RecentInfo/Manager/Windows.pm
 lib/RecentInfo/Manager/XBEL.pm
 LICENSE
 Makefile.PL
@@ -14,6 +15,7 @@ META.json
 META.yml
 README
 README.mkdn
+scripts/recent-files
 scripts/recent-files-add
 scripts/recent-files-list
 scripts/recent-files-remove
