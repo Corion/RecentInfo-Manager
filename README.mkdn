@@ -52,3 +52,5 @@ The module also acts as a factory for OS-specific implementations.
     $mgr->save;
 
 # SEE ALSO
+
+[Mac::RecentDocuments](https://metacpan.org/pod/Mac%3A%3ARecentDocuments) - recent documents for old MacOS
