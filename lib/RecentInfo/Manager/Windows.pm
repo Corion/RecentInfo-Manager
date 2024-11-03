@@ -1,4 +1,4 @@
-package RecentInfo::Manager::Windows 0.01;
+package RecentInfo::Manager::Windows 0.02;
 use 5.020;
 use Moo 2;
 use experimental 'signatures';
