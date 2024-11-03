@@ -52,7 +52,11 @@ if( my $exe = $module{EXE_FILES}) {
 };
 
 for (@files) {
-    check($_)
+    if( !/Windows/ or $^O =~ /MSWin32|cygwin/i ) {
+        check($_)
+    } else {
+        SKIP: { skip "Skipping $_ on $^O", 1 }
+    }
 }
 
 sub wanted {
