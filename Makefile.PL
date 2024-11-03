@@ -45,7 +45,7 @@ my %module = (
             license    => "https://dev.perl.org/licenses/",
         },
         dynamic_config   => 1, # we have dynamic prerequisites
-        x_static_install => 1, # we are pure Perl and don't do anything fancy
+        x_static_install => 1, # we are pure Perl and don't do anything fancy, we can be installed by copying files
     },
 
     MIN_PERL_VERSION => '5.020', # I use signatures
