@@ -6,6 +6,10 @@ use Exporter 'import';
 use Module::Load;
 our @EXPORT_OK = (qw(add_recent_file remove_recent_file recent_files));
 
+=head1 NAME
+
+RecentInfo::Manager - manage recent documents
+
 =head1 SYNOPSIS
 
   use RecentInfo::Manager 'add_recent_file';

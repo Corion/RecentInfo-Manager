@@ -6,6 +6,12 @@ use experimental 'signatures';
 use Carp 'croak';
 use URI;
 
+=head1 NAME
+
+RecentInfo::Entry - recent files XBEL entry
+
+=cut
+
 has ['href'] => (
     is => 'ro',
     required => 1,

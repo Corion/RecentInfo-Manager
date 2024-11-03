@@ -3,6 +3,12 @@ use 5.020;
 use Moo 2;
 use experimental 'signatures';
 
+=head1 NAME
+
+RecentInfo::GroupEntry - recent files group XBEL entry
+
+=cut
+
 has ['group'] => (
     is => 'ro',
     required => 1
@@ -22,6 +28,7 @@ sub from_XML_fragment( $class, $frag ) {
 }
 
 1;
+
 =head1 REPOSITORY
 
 The public repository of this module is

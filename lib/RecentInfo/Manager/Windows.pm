@@ -4,6 +4,12 @@ use Moo 2;
 use experimental 'signatures';
 use Carp 'croak';
 
+=head1 NAME
+
+RecentInfo::Manager::Windows - manage recent documents under Windows
+
+=cut
+
 use Date::Format::ISO8601 'gmtime_to_iso8601_datetime';
 use List::Util 'first';
 use File::Spec;

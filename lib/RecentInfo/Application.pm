@@ -3,6 +3,12 @@ use 5.020;
 use Moo 2;
 use experimental 'signatures';
 
+=head1 NAME
+
+RecentInfo::Application - recent files application XBEL entry
+
+=cut
+
 has ['name', 'exec'] => (
     is => 'ro',
     required => 1

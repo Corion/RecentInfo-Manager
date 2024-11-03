@@ -3,6 +3,12 @@ use 5.020;
 use Moo 2;
 use experimental 'signatures';
 
+=head1 NAME
+
+RecentInfo::Manager::XBEL - manage recent documents XBEL files
+
+=cut
+
 use XML::LibXML;
 use XML::LibXML::PrettyPrint;
 use IO::AtomicFile;
